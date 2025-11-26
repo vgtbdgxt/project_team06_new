@@ -1,0 +1,70 @@
+/* App-specific styles */
+.app-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+/* Leaflet map container */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Custom marker styles */
+.custom-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.user-location-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Filter panel styles */
+.filter-panel {
+  background-color: #f8f9fa;
+}
+
+.form-check-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Clinic details styles */
+.clinic-details {
+  background-color: #ffffff;
+}
+
+.clinic-details h4 {
+  color: #0d6efd;
+}
+
+.clinic-details a {
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.clinic-details a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  aside {
+    width: 100% !important;
+    max-height: 200px;
+  }
+
+  main {
+    height: 400px;
+  }
+}
+
