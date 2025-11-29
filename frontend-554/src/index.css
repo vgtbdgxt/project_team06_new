@@ -1,0 +1,21 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #1a1a1a;
+    background-color: #ffffff;
+    scroll-behavior: smooth;
+}
+
+#root {
+    width: 100%;
+    min-height: 100vh;
+}
+

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mental Health Clinic Accessibility Dashboard</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    
+    <!-- Map CSS -->
+    <link rel="stylesheet" href="./src/css/map.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Mental Health Clinic Accessibility Dashboard</h1>
+      </header>
+      <div id="sidebar">
+        <button id="locate-me-btn">📍 Locate Me</button>
+        
+        <div class="filter-group">
+          <h2>Maximum Distance</h2>
+          <input type="range" id="max-distance" min="1" max="20" value="10" step="1" />
+          <div class="small">
+            <span id="max-distance-value">10</span> km
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h3>Clinic Type</h3>
+          <div class="checkbox-list">
+            <label><input type="checkbox" class="filter-type" value="hospital" /> Hospital</label>
+            <label><input type="checkbox" class="filter-type" value="outpatient" /> Outpatient</label>
+            <label><input type="checkbox" class="filter-type" value="specialized" /> Specialized</label>
+            <label><input type="checkbox" class="filter-type" value="urgent_care" /> Urgent Care</label>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h3>Specialty / Focus</h3>
+          <div class="checkbox-list">
+            <label><input type="checkbox" class="filter-focus" value="anxiety" /> Anxiety</label>
+            <label><input type="checkbox" class="filter-focus" value="depression" /> Depression</label>
+            <label><input type="checkbox" class="filter-focus" value="cbt" /> CBT</label>
+            <label><input type="checkbox" class="filter-focus" value="trauma" /> Trauma</label>
+            <label><input type="checkbox" class="filter-focus" value="medication" /> Medication</label>
+            <label><input type="checkbox" class="filter-focus" value="family" /> Family / couples</label>
+            <label><input type="checkbox" class="filter-focus" value="crisis" /> Crisis</label>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <h3>Accessibility</h3>
+          <div class="checkbox-list">
+            <label><input type="checkbox" id="filter-accepts-undiagnosed" /> Accepts undiagnosed</label>
+            <label><input type="checkbox" id="filter-online" /> Online available</label>
+            <label><input type="checkbox" id="filter-multilingual" /> Multilingual</label>
+            <label><input type="checkbox" id="filter-no-guardian" /> No guardian required</label>
+          </div>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div id="details">
+        <div id="no-selection-hint" class="muted">
+          Click a clinic marker on the map to view details.
+        </div>
+        <div id="clinic-details" style="display: none;">
+          <h2 id="clinic-name"></h2>
+          <div id="clinic-meta"></div>
+          
+          <div class="detail-section">
+            <div class="detail-section-title">Contact</div>
+            <div id="clinic-contact" class="muted"></div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Hours</div>
+            <div id="clinic-hours" class="muted"></div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Appointment</div>
+            <div id="clinic-appointment" class="muted"></div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Focus Areas</div>
+            <div id="clinic-focus"></div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-section-title">Accessibility & Info</div>
+            <div id="clinic-accessibility"></div>
+          </div>
+
+          <div class="detail-section">
+            <div id="clinic-distance" class="muted"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    
+    <!-- Map JS -->
+    <script type="module" src="./src/js/main.js"></script>
+  </body>
+</html>
+
