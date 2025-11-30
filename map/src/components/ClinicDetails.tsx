@@ -1,144 +1,130 @@
-import { Clinic } from '../data/clinics';
-import { calculateDistance } from '../utils/distance';
+// src/components/ClinicDetails.tsx
+import type { Clinic } from "../types/Clinic";
+import { calculateDistance } from "../utils/distance";
 
-interface ClinicDetailsProps {
+interface Props {
   clinic: Clinic | null;
   userLocation: { lat: number; lon: number } | null;
 }
 
-export function ClinicDetails({ clinic, userLocation }: ClinicDetailsProps) {
+export function ClinicDetails({ clinic, userLocation }: Props) {
   if (!clinic) {
     return (
-      <div className="clinic-details p-3">
-        <h3 className="h5 mb-3">Clinic Details</h3>
-        <p className="text-muted">
-          Click a clinic marker on the map to see details here.
-        </p>
+      <div className="p-3">
+        <h5>Clinic Details</h5>
+        <p className="text-muted">Click a marker on the map to see details here.</p>
       </div>
     );
   }
 
-  const distance = userLocation
-    ? calculateDistance(userLocation.lat, userLocation.lon, clinic.lat, clinic.lon)
+  // Distance calculation
+  const distanceKm = userLocation
+    ? calculateDistance(
+      userLocation.lat,
+      userLocation.lon,
+      clinic.latitude,
+      clinic.longitude
+    )
     : null;
 
-  const typeLabels: Record<string, string> = {
-    hospital: 'Hospital',
-    outpatient: 'Outpatient',
-    specialized: 'Specialized Program',
-    urgent_care: 'Urgent Care'
-  };
+  const distanceMiles = distanceKm ? distanceKm * 0.621371 : null;
 
-  const costLabels: Record<string, string> = {
-    free: 'Free',
-    sliding: 'Sliding Scale',
-    insurance: 'Insurance Accepted',
-    private: 'Private Pay'
-  };
+  // Category consolidation
+  const categories: string[] = [
+    clinic.category1,
+    clinic.category2,
+    clinic.category3,
+  ]
+    .filter(Boolean)
+    .flatMap((str) =>
+      (str as string)
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+    );
 
   return (
-    <div className="clinic-details p-3 h-100 overflow-auto">
-      <h3 className="h5 mb-3">Clinic Details</h3>
+    <div className="clinic-details p-3 overflow-auto" style={{ height: "100%" }}>
+      {/* NAME */}
+      <h5 className="fw-bold mb-1">{clinic.name}</h5>
 
-      {/* Name and Type */}
-      <div className="mb-3">
-        <h4 className="h5">{clinic.name}</h4>
-        <span className="badge bg-primary">{typeLabels[clinic.type]}</span>
-        {distance !== null && (
-          <span className="badge bg-info ms-2">
-            {distance.toFixed(1)} km away
-          </span>
+      {/* DISTANCE */}
+      {distanceMiles !== null && (
+        <span className="badge bg-primary mb-3">
+          {distanceMiles.toFixed(1)} miles away
+        </span>
+      )}
+
+      {/* ADDRESS */}
+      <section className="mb-3">
+        <h6>Address</h6>
+        <p className="mb-1">{clinic.address1}</p>
+        {clinic.address2 && <p className="mb-1">{clinic.address2}</p>}
+        <p className="mb-0">
+          {clinic.city}, {clinic.state} {clinic.zip ?? ""}
+        </p>
+      </section>
+
+      {/* CONTACT */}
+      <section className="mb-3">
+        <h6>Contact</h6>
+
+        {clinic.phones && (
+          <p className="mb-1">
+            <strong>Phone:</strong> {clinic.phones}
+          </p>
         )}
-      </div>
 
-      {/* Contact Information */}
-      <div className="mb-3">
-        <h5 className="h6 text-muted">Contact</h5>
-        <p className="mb-1">
-          <strong>Address:</strong> {clinic.address}
-        </p>
-        <p className="mb-1">
-          <strong>Phone:</strong>{' '}
-          <a href={`tel:${clinic.phone}`}>{clinic.phone}</a>
-        </p>
-        <p className="mb-0">
-          <strong>Email:</strong>{' '}
-          <a href={`mailto:${clinic.email}`}>{clinic.email}</a>
-        </p>
-      </div>
+        {clinic.email && (
+          <p className="mb-1">
+            <strong>Email:</strong> {clinic.email}
+          </p>
+        )}
 
-      {/* Hours and Appointment */}
-      <div className="mb-3">
-        <h5 className="h6 text-muted">Opening & Appointment</h5>
-        <p className="mb-1">
-          <strong>Hours:</strong> {clinic.hours}
-        </p>
-        <p className="mb-0 small">
-          <strong>Appointment:</strong> {clinic.appointment}
-        </p>
-      </div>
+        {clinic.url && (
+          <p className="mb-1">
+            <strong>Website:</strong>{" "}
+            <a
+              href={clinic.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ wordBreak: "break-all" }}
+            >
+              {clinic.url}
+            </a>
+          </p>
+        )}
+      </section>
 
-      {/* Clinical Focus */}
-      <div className="mb-3">
-        <h5 className="h6 text-muted">Clinical Focus</h5>
-        <div>
-          {clinic.focus.map((focus) => (
-            <span key={focus} className="badge bg-secondary me-1 mb-1">
-              {focus.charAt(0).toUpperCase() + focus.slice(1)}
-            </span>
-          ))}
-        </div>
-      </div>
+      {/* HOURS */}
+      {clinic.hours && (
+        <section className="mb-3">
+          <h6>Hours</h6>
+          <p className="mb-0">{clinic.hours}</p>
+        </section>
+      )}
 
-      {/* Accessibility Features */}
-      <div className="mb-3">
-        <h5 className="h6 text-muted">Accessibility</h5>
-        <ul className="list-unstyled mb-0">
-          {clinic.online && (
-            <li>
-              <span className="badge bg-success me-1">✓</span> Online /
-              Telehealth
-            </li>
-          )}
-          {clinic.multilingual && (
-            <li>
-              <span className="badge bg-success me-1">✓</span> Multilingual
-              Support
-            </li>
-          )}
-          {clinic.acceptsUndiagnosed && (
-            <li>
-              <span className="badge bg-success me-1">✓</span> Accepts
-              Undiagnosed / Self-Referral
-            </li>
-          )}
-          {clinic.noGuardianRequired && (
-            <li>
-              <span className="badge bg-success me-1">✓</span> No Guardian
-              Required
-            </li>
-          )}
-          {!clinic.online &&
-            !clinic.multilingual &&
-            !clinic.acceptsUndiagnosed &&
-            !clinic.noGuardianRequired && (
-              <li className="text-muted">No special accessibility features listed</li>
-            )}
-        </ul>
-      </div>
+      {/* PROGRAM INFO */}
+      {(clinic.description || clinic.info1 || clinic.info2) && (
+        <section className="mb-3">
+          <h6>Program Info</h6>
+          {clinic.description && <p>{clinic.description}</p>}
+          {clinic.info1 && <p>{clinic.info1}</p>}
+          {clinic.info2 && <p>{clinic.info2}</p>}
+        </section>
+      )}
 
-      {/* Additional Info */}
-      <div className="mb-3">
-        <h5 className="h6 text-muted">Additional Information</h5>
-        <p className="mb-1">
-          <strong>Cost Model:</strong> {costLabels[clinic.costModel]}
-        </p>
-        <p className="mb-0">
-          <strong>Estimated Wait Time:</strong> {clinic.waitTimeDays} day
-          {clinic.waitTimeDays !== 1 ? 's' : ''}
-        </p>
-      </div>
+      {/* CATEGORIES */}
+      {categories.length > 0 && (
+        <section className="mb-3">
+          <h6>Category</h6>
+          <ul className="mb-0">
+            {categories.map((cat, idx) => (
+              <li key={idx}>{cat}</li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
-
