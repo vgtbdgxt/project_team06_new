@@ -1,0 +1,137 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  grid-template-rows: 60px 1fr;
+  grid-template-areas:
+    "header header header"
+    "sidebar map details";
+  height: 100vh;
+}
+
+header {
+  grid-area: header;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid #ddd;
+  background: #f8fafc;
+}
+
+header h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+#sidebar {
+  grid-area: sidebar;
+  border-right: 1px solid #ddd;
+  padding: 12px;
+  overflow-y: auto;
+  background: #f9fafb;
+}
+
+#map {
+  grid-area: map;
+}
+
+#details {
+  grid-area: details;
+  border-left: 1px solid #ddd;
+  padding: 12px;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+/* Filters */
+h2, h3 {
+  font-size: 14px;
+  margin: 12px 0 4px;
+}
+
+label {
+  font-size: 13px;
+}
+
+.filter-group {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+.small {
+  font-size: 12px;
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  font-size: 11px;
+  margin: 0 4px 4px 0;
+}
+
+.pill.green { background: #bbf7d0; }
+.pill.red { background: #fecaca; }
+.pill.blue { background: #bfdbfe; }
+.pill.yellow { background: #fef3c7; }
+
+/* Details panel */
+#clinic-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+#clinic-meta {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.detail-section {
+  margin-bottom: 10px;
+}
+
+.detail-section-title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.muted {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+button {
+  border-radius: 999px;
+  border: 1px solid #cbd5f5;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #eef2ff;
+}
