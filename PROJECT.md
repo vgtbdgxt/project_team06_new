@@ -16,7 +16,7 @@
 
 - [Paper PDF](<article-pdf-url>) and [Paper Overleaf URL](<overleaf-article-url>)
 - [Demonstration URL](<https://vgtbdgxt.github.io/project_team06_new/>)
-- [Presentation URL](<[presentation-pdf-url](https://docs.google.com/presentation/d/1r7qyPXk9crbk30DdelOYCBEwBmpl8XMA3RiDkE6Zy50/edit?usp=sharing)>)
+- [Presentation URL](<https://docs.google.com/presentation/d/1r7qyPXk9crbk30DdelOYCBEwBmpl8XMA3RiDkE6Zy50/edit?usp=sharing>)
 - [YouTube video Link](<youtube-video-url>)
 
 ## TEAM CONTRIBUTIONS
