@@ -9,7 +9,7 @@
 - Team members:
   1. Minghua Zhang minghuaz@usc.edu
   2. Tong Xu txu11055@usc.edu
-  3. member-name member-username@usc.edu
+  3. Jingyun Zhang jingyunz@usc.edu
   4. member-name member-username@usc.edu
 
 ## ARTIFACTS
