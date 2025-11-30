@@ -15,7 +15,7 @@
 ## ARTIFACTS
 
 - [Paper PDF](<article-pdf-url>) and [Paper Overleaf URL](<overleaf-article-url>)
-- [Demonstration URL](<demo-url>)
+- [Demonstration URL](<https://vgtbdgxt.github.io/project_team06_new/>)
 - [Presentation URL](<presentation-pdf-url>)
 - [YouTube video Link](<youtube-video-url>)
 
