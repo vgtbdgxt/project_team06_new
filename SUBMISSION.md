@@ -14,10 +14,10 @@
 
 ## ARTIFACTS
 
-- [Paper PDF](<article-pdf-url>) and [Paper Overleaf URL](<overleaf-article-url>)
+- [Paper PDF]
 - [Demonstration URL](<https://vgtbdgxt.github.io/project_team06_new/>)
 - [Presentation URL](<https://docs.google.com/presentation/d/1r7qyPXk9crbk30DdelOYCBEwBmpl8XMA3RiDkE6Zy50/edit?usp=sharing>)
-- [YouTube video Link](<youtube-video-url>)
+- [YouTube video Link]
 
 ## TEAM CONTRIBUTIONS
 
