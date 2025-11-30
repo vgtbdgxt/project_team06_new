@@ -8,7 +8,7 @@
 - Group name: Team06
 - Team members:
   1. Minghua Zhang minghuaz@usc.edu
-  2. member-name member-username@usc.edu
+  2. Tong Xu txu11055@usc.edu
   3. member-name member-username@usc.edu
   4. member-name member-username@usc.edu
 
