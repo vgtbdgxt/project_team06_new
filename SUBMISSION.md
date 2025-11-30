@@ -4,20 +4,20 @@
 
 ## PROJECT INFORMATION
 
-- Project title:
-- Group name:
+- Project title: Mental Health Accessibility Map 
+- Group name: Team06
 - Team members:
-  1. member-name member-username@usc.edu
-  2. member-name member-username@usc.edu
-  3. member-name member-username@usc.edu
+  1. Minghua Zhang minghuaz@usc.edu
+  2. Tong Xu txu11055@usc.edu
+  3. Jingyun Zhang jingyunz@usc.edu
   4. member-name member-username@usc.edu
 
 ## ARTIFACTS
 
-- [Paper PDF](<article-pdf-url>) and [Paper Overleaf URL](<overleaf-article-url>)
-- [Demonstration URL](<demo-url>)
-- [Presentation URL](<presentation-pdf-url>)
-- [YouTube video Link](<youtube-video-url>)
+- [Paper PDF]
+- [Demonstration URL](<https://vgtbdgxt.github.io/project_team06_new/>)
+- [Presentation URL](<https://docs.google.com/presentation/d/1r7qyPXk9crbk30DdelOYCBEwBmpl8XMA3RiDkE6Zy50/edit?usp=sharing>)
+- [YouTube video Link]
 
 ## TEAM CONTRIBUTIONS
 
