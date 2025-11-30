@@ -4,10 +4,10 @@
 
 ## PROJECT INFORMATION
 
-- Project title:
-- Group name:
+- Project title: Mental Health Accessibility Map 
+- Group name: Team06
 - Team members:
-  1. member-name member-username@usc.edu
+  1. Minghua Zhang minghuaz@usc.edu
   2. member-name member-username@usc.edu
   3. member-name member-username@usc.edu
   4. member-name member-username@usc.edu
