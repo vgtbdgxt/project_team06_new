@@ -1,365 +1,123 @@
-export interface Clinic {
-  id: string;
-  name: string;
-  lat: number;
-  lon: number;
-  type: 'hospital' | 'outpatient' | 'specialized' | 'urgent_care';
-  address: string;
-  email: string;
-  phone: string;
-  hours: string;
-  appointment: string;
-  focus: string[];
-  online: boolean;
-  acceptsUndiagnosed: boolean;
-  multilingual: boolean;
-  noGuardianRequired: boolean;
-  waitTimeDays: number;
-  costModel: 'free' | 'sliding' | 'insurance' | 'private';
+// src/data/clinics.ts
+import raw from "./clinics_raw.json";
+import type { Clinic } from "../types/Clinic";
+
+interface ArcGisFeature {
+  attributes: any;
+  geometry?: { x: number; y: number };
 }
 
-export const CLINICS: Clinic[] = [
-  {
-    id: '1',
-    name: 'UCLA Counseling Center',
-    lat: 34.0689,
-    lon: -118.4452,
-    type: 'outpatient',
-    address: '221 Westwood Plaza, Los Angeles, CA 90095',
-    email: 'counseling@ucla.edu',
-    phone: '(310) 825-0768',
-    hours: 'Mon–Fri 8:00–17:00',
-    appointment: 'Online booking; same-week intake slots available',
-    focus: ['anxiety', 'depression', 'cbt'],
-    online: true,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: true,
-    waitTimeDays: 7,
-    costModel: 'sliding'
-  },
-  {
-    id: '2',
-    name: 'LA Community Mental Health Center',
-    lat: 34.0407,
-    lon: -118.2468,
-    type: 'hospital',
-    address: '100 Main St, Los Angeles, CA 90012',
-    email: 'info@lacommunitymh.org',
-    phone: '(213) 555-1234',
-    hours: '24/7 emergency & inpatient services',
-    appointment: 'Walk-in for urgent care; referral required for ongoing care',
-    focus: ['anxiety', 'depression', 'trauma', 'medication'],
-    online: false,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: false,
-    waitTimeDays: 3,
-    costModel: 'insurance'
-  },
-  {
-    id: '3',
-    name: 'Westside CBT & Anxiety Clinic',
-    lat: 34.0522,
-    lon: -118.35,
-    type: 'specialized',
-    address: '500 Olympic Blvd, Los Angeles, CA 90064',
-    email: 'frontdesk@westsidecbt.com',
-    phone: '(310) 555-7777',
-    hours: 'Mon–Sat 9:00–19:00',
-    appointment: 'Phone screening then scheduled CBT sessions',
-    focus: ['anxiety', 'cbt', 'trauma'],
-    online: true,
-    acceptsUndiagnosed: true,
-    multilingual: false,
-    noGuardianRequired: true,
-    waitTimeDays: 14,
-    costModel: 'private'
-  },
-  {
-    id: '4',
-    name: 'Downtown Urgent Care for Mental Health',
-    lat: 34.0489,
-    lon: -118.2578,
-    type: 'urgent_care',
-    address: '220 S Hope St, Los Angeles, CA 90012',
-    email: 'urgent@dtmhcare.org',
-    phone: '(213) 555-9090',
-    hours: 'Mon–Sun 10:00–22:00',
-    appointment: 'Walk-in only; short crisis stabilization sessions',
-    focus: ['trauma'],
-    online: false,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: false,
-    waitTimeDays: 1,
-    costModel: 'sliding'
-  },
-  {
-    id: '5',
-    name: 'South LA Family Therapy Center',
-    lat: 33.98,
-    lon: -118.28,
-    type: 'outpatient',
-    address: '1200 S Vermont Ave, Los Angeles, CA 90006',
-    email: 'hello@southlafamily.org',
-    phone: '(323) 555-6060',
-    hours: 'Tue–Sat 9:00–18:00',
-    appointment: 'Phone intake; priority for youth & families',
-    focus: ['family', 'depression', 'anxiety'],
-    online: true,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: false,
-    waitTimeDays: 10,
-    costModel: 'sliding'
-  },
-  {
-    id: '6',
-    name: 'Eastside Psychiatry & Medication Clinic',
-    lat: 34.05,
-    lon: -118.2,
-    type: 'specialized',
-    address: '1500 Cesar Chavez Ave, Los Angeles, CA 90033',
-    email: 'psychiatry@eastsideclinic.com',
-    phone: '(323) 555-8888',
-    hours: 'Mon–Fri 9:00–17:30',
-    appointment: 'Referral or PCP recommendation preferred',
-    focus: ['medication', 'depression', 'anxiety'],
-    online: false,
-    acceptsUndiagnosed: false,
-    multilingual: false,
-    noGuardianRequired: true,
-    waitTimeDays: 21,
-    costModel: 'insurance'
-  },
-  {
-    id: '7',
-    name: 'Student Wellness & Safe Space Center',
-    lat: 34.0224,
-    lon: -118.2851,
-    type: 'outpatient',
-    address: 'Campus Center, University District, Los Angeles, CA 90007',
-    email: 'wellness@campuscenter.edu',
-    phone: '(213) 555-2222',
-    hours: 'Mon–Fri 9:00–20:00',
-    appointment: 'Drop-in peer support + short-term counseling',
-    focus: ['anxiety', 'depression', 'family'],
-    online: true,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: true,
-    waitTimeDays: 2,
-    costModel: 'free'
-  },
-  {
-    id: '8',
-    name: 'Neighborhood Trauma Recovery Program',
-    lat: 34.08,
-    lon: -118.3,
-    type: 'specialized',
-    address: '600 Trauma Way, Los Angeles, CA 90042',
-    email: 'recovery@traumaprogram.org',
-    phone: '(213) 555-3333',
-    hours: 'Mon–Thu 10:00–18:00',
-    appointment: 'Referral from ER / shelter / community orgs',
-    focus: ['trauma', 'family'],
-    online: false,
-    acceptsUndiagnosed: true,
-    multilingual: false,
-    noGuardianRequired: false,
-    waitTimeDays: 28,
-    costModel: 'insurance'
-  },
-  {
-    id: '9',
-    name: 'West LA Mindful Psychiatry & Therapy',
-    lat: 34.05,
-    lon: -118.45,
-    type: 'specialized',
-    address: '2200 Bundy Dr, Los Angeles, CA 90064',
-    email: 'info@mindfulwestla.com',
-    phone: '(310) 555-4444',
-    hours: 'Mon–Sat 9:00–19:00',
-    appointment: 'Online form; telehealth available',
-    focus: ['medication', 'cbt', 'anxiety'],
-    online: true,
-    acceptsUndiagnosed: true,
-    multilingual: false,
-    noGuardianRequired: true,
-    waitTimeDays: 5,
-    costModel: 'private'
-  },
-  {
-    id: '10',
-    name: 'Central Youth & Teen Mental Health Hub',
-    lat: 34.045,
-    lon: -118.27,
-    type: 'outpatient',
-    address: '300 Youth Ave, Los Angeles, CA 90015',
-    email: 'teencare@centralsupport.org',
-    phone: '(213) 555-1212',
-    hours: 'Mon–Sat 11:00–20:00',
-    appointment: 'Parent or self-referral; walk-in triage available',
-    focus: ['anxiety', 'depression', 'family'],
-    online: true,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: false,
-    waitTimeDays: 4,
-    costModel: 'sliding'
-  },
-  {
-    id: '11',
-    name: 'Pacific Coast Behavioral Health Hospital',
-    lat: 34.0928,
-    lon: -118.3287,
-    type: 'hospital',
-    address: '1800 Pacific Coast Hwy, Los Angeles, CA 90291',
-    email: 'admissions@pacificcoastbh.org',
-    phone: '(310) 555-5000',
-    hours: '24/7 inpatient & crisis services',
-    appointment: 'Emergency intake or physician referral',
-    focus: ['depression', 'trauma', 'medication'],
-    online: false,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: false,
-    waitTimeDays: 0,
-    costModel: 'insurance'
-  },
-  {
-    id: '12',
-    name: 'Harbor Community Mental Wellness',
-    lat: 33.7326,
-    lon: -118.2686,
-    type: 'outpatient',
-    address: '800 Harbor Blvd, Los Angeles, CA 90731',
-    email: 'contact@harborwellness.org',
-    phone: '(310) 555-6161',
-    hours: 'Mon–Fri 8:00–18:00, Sat 9:00–13:00',
-    appointment: 'Online scheduling or phone intake',
-    focus: ['anxiety', 'depression', 'cbt', 'family'],
-    online: true,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: true,
-    waitTimeDays: 6,
-    costModel: 'sliding'
-  },
-  {
-    id: '13',
-    name: 'Valley Trauma & PTSD Specialized Center',
-    lat: 34.1868,
-    lon: -118.4489,
-    type: 'specialized',
-    address: '15000 Ventura Blvd, Los Angeles, CA 91436',
-    email: 'info@valleytrauma.org',
-    phone: '(818) 555-7777',
-    hours: 'Mon–Thu 10:00–19:00, Fri 10:00–17:00',
-    appointment: 'Initial assessment required; trauma-focused therapy',
-    focus: ['trauma', 'cbt'],
-    online: true,
-    acceptsUndiagnosed: false,
-    multilingual: false,
-    noGuardianRequired: true,
-    waitTimeDays: 18,
-    costModel: 'private'
-  },
-  {
-    id: '14',
-    name: 'East LA Bilingual Mental Health Services',
-    lat: 34.0479,
-    lon: -118.1724,
-    type: 'outpatient',
-    address: '2500 E Cesar E Chavez Ave, Los Angeles, CA 90033',
-    email: 'servicios@eastlamh.org',
-    phone: '(323) 555-3030',
-    hours: 'Mon–Sat 8:00–20:00',
-    appointment: 'Walk-in welcome; bilingual staff available',
-    focus: ['anxiety', 'depression', 'family'],
-    online: false,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: true,
-    waitTimeDays: 5,
-    costModel: 'sliding'
-  },
-  {
-    id: '15',
-    name: 'Crisis Intervention & Stabilization Unit',
-    lat: 34.0634,
-    lon: -118.3005,
-    type: 'urgent_care',
-    address: '500 N Vermont Ave, Los Angeles, CA 90004',
-    email: 'crisis@cisu.org',
-    phone: '(213) 555-8888',
-    hours: '24/7 crisis support',
-    appointment: 'Walk-in or call for immediate assistance',
-    focus: ['trauma'],
-    online: false,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: true,
-    waitTimeDays: 0,
-    costModel: 'free'
-  },
-  {
-    id: '16',
-    name: 'Beverly Hills Private Psychiatry Group',
-    lat: 34.0736,
-    lon: -118.4004,
-    type: 'specialized',
-    address: '9400 Wilshire Blvd, Beverly Hills, CA 90212',
-    email: 'appointments@bhpsychiatry.com',
-    phone: '(310) 555-9999',
-    hours: 'Mon–Fri 8:00–18:00',
-    appointment: 'Private consultation; insurance accepted',
-    focus: ['medication', 'anxiety', 'depression', 'cbt'],
-    online: true,
-    acceptsUndiagnosed: false,
-    multilingual: false,
-    noGuardianRequired: true,
-    waitTimeDays: 10,
-    costModel: 'private'
-  },
-  {
-    id: '17',
-    name: 'Community Health Outreach Program',
-    lat: 34.0233,
-    lon: -118.2192,
-    type: 'outpatient',
-    address: '700 S Alameda St, Los Angeles, CA 90021',
-    email: 'outreach@communityhealth.org',
-    phone: '(213) 555-4040',
-    hours: 'Mon–Fri 9:00–17:00, Sat 10:00–14:00',
-    appointment: 'Community referral or self-referral welcome',
-    focus: ['anxiety', 'depression', 'family'],
-    online: true,
-    acceptsUndiagnosed: true,
-    multilingual: true,
-    noGuardianRequired: true,
-    waitTimeDays: 8,
-    costModel: 'free'
-  },
-  {
-    id: '18',
-    name: 'Northridge Family & Couples Therapy',
-    lat: 34.2283,
-    lon: -118.5361,
-    type: 'specialized',
-    address: '9300 Reseda Blvd, Northridge, CA 91324',
-    email: 'therapy@northridgefamily.com',
-    phone: '(818) 555-2020',
-    hours: 'Mon–Sat 9:00–20:00',
-    appointment: 'Online booking for couples and family sessions',
-    focus: ['family', 'cbt'],
-    online: true,
-    acceptsUndiagnosed: true,
-    multilingual: false,
-    noGuardianRequired: true,
-    waitTimeDays: 12,
-    costModel: 'private'
-  }
-];
+const features: ArcGisFeature[] = (raw as any).features ?? raw ?? [];
 
+/**
+ * convert a single ArcGIS feature to Clinic
+ */
+function normalizeClinic(f: ArcGisFeature): Clinic | null {
+  const a = f.attributes ?? {};
+
+  // ------------------------------
+  // name extraction
+  // ------------------------------
+  const rawOrg = (a["org_name"] ?? "").toString().trim();
+  const programNameLower = (a["name"] ?? "").toString().trim();
+  const programNameUpper = (a["Name"] ?? "").toString().trim();
+
+  //
+  const finalName =
+    rawOrg ||
+    programNameUpper ||
+    programNameLower ||
+    "Unnamed Program";
+
+  // ------------------------------
+  // lat n long
+  // ------------------------------
+  const latitude =
+    a.latitude ??
+    a.LATITUDE ??
+    a.POINT_Y ??
+    f.geometry?.y;
+
+  const longitude =
+    a.longitude ??
+    a.LONGITUDE ??
+    a.POINT_X ??
+    f.geometry?.x;
+
+  if (latitude == null || longitude == null) return null;
+
+  // ------------------------------
+  // category string processing
+  // ------------------------------
+  const categories = [a.cat1, a.cat2, a.cat3]
+    .filter(Boolean)
+    .flatMap((entry: string) =>
+      entry
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0)
+    );
+
+  // ------------------------------
+  //  URL processing
+  // ------------------------------
+  let safeUrl: string | null = a.url ?? a.link ?? null;
+  if (safeUrl && typeof safeUrl === "string") {
+    safeUrl = safeUrl.trim();
+    if (
+      safeUrl &&
+      !safeUrl.startsWith("http://") &&
+      !safeUrl.startsWith("https://")
+    ) {
+      safeUrl = "https://" + safeUrl;
+    }
+  }
+
+  const clinic: Clinic = {
+    id: a.OBJECTID ?? a.objectid ?? Math.random(),
+
+    name: finalName,
+    orgName: rawOrg || null,
+
+    address1: a.addrln1 ?? "",
+    address2: a.addrln2 ?? null,
+    city: a.city ?? "",
+    state: a.state ?? "CA",
+    zip: a.zip ?? null,
+
+    latitude,
+    longitude,
+
+    phones: a.phones ?? null,
+    hours: a.hours ?? null,
+    url: safeUrl,
+    email: a.email ?? null,
+
+    description: a.description ?? null,
+    info1: a.info1 ?? null,
+    info2: a.info2 ?? null,
+
+    category1: a.cat1 ?? null,
+    category2: a.cat2 ?? null,
+    category3: a.cat3 ?? null,
+    // categories
+  };
+
+  return clinic;
+}
+
+/**
+ * export final clinic list
+ */
+export const clinics: Clinic[] = features
+  .map(normalizeClinic)
+  .filter((c): c is Clinic => c !== null);
+
+
+const debugClinic10049 = clinics.find(
+  (c) => c.id === 10049
+);
+if (debugClinic10049) {
+
+  console.log("DEBUG clinic 10049:", debugClinic10049);
+}

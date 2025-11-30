@@ -1,121 +1,138 @@
-import { useState, useMemo } from 'react';
-import { Clinic } from '../data/clinics';
-import { calculateDistance } from '../utils/distance';
+// src/hooks/useClinicFilters.ts
+
+import { useMemo, useState } from "react";
+import type { Clinic } from "../types/Clinic";
+import { calculateDistance } from "../utils/distance";
 
 export interface ClinicFilters {
-  types: string[];
-  specialties: string[];
+  search: string;
+  city: string;
+  selectedCategories: string[];
   maxDistance: number;
-  online: boolean | null;
-  multilingual: boolean | null;
-  acceptsUndiagnosed: boolean | null;
-  noGuardianRequired: boolean | null;
 }
-
-const DEFAULT_FILTERS: ClinicFilters = {
-  types: ['hospital', 'outpatient', 'specialized', 'urgent_care'],
-  specialties: [],
-  maxDistance: 10,
-  online: null,
-  multilingual: null,
-  acceptsUndiagnosed: null,
-  noGuardianRequired: null
-};
 
 export function useClinicFilters(
   clinics: Clinic[],
   userLocation: { lat: number; lon: number } | null
 ) {
-  const [filters, setFilters] = useState<ClinicFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<ClinicFilters>({
+    search: "",
+    city: "All",
+    selectedCategories: [],
+    maxDistance: 10,
+  });
+
+  /** STEP 1 — Always apply Search + Distance first */
+  const baseFiltered = useMemo(() => {
+    let data = clinics.map((c) => ({ ...c }));
+
+    // Distance filter
+    if (userLocation) {
+      data = data
+        .map((c) => ({
+          ...c,
+          distanceKm: calculateDistance(
+            userLocation.lat,
+            userLocation.lon,
+            c.latitude,
+            c.longitude
+          ),
+        }))
+        .filter((c) => c.distanceKm! <= filters.maxDistance);
+    }
+
+    // Search filter
+    const q = filters.search.toLowerCase().trim();
+    if (q !== "") {
+      data = data.filter((c) => {
+        const fields = [
+          c.name,
+          c.orgName ?? "",
+          c.description ?? "",
+          c.city ?? "",
+        ].map((s) => s.toLowerCase());
+
+        return fields.some((f) => f.includes(q));
+      });
+    }
+
+    return data;
+  }, [clinics, userLocation, filters.search, filters.maxDistance]);
+
+
+  /** STEP 2 — Dynamic options: these depend on baseFiltered (NOT final filteredClinics) */
+
+  // Dynamic city list
+  const dynamicCities = useMemo(() => {
+    const cities = Array.from(
+      new Set(baseFiltered.map((c) => c.city).filter(Boolean))
+    ).sort();
+    return ["All", ...cities];
+  }, [baseFiltered]);
+
+  // Dynamic category list
+  const dynamicCategories = useMemo(() => {
+    const exploded = baseFiltered.flatMap((c) =>
+      [c.category1, c.category2, c.category3]
+        .filter(Boolean)
+        .flatMap((str) =>
+          str!
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0)
+        )
+    );
+
+    const unique = Array.from(new Set(exploded)).sort();
+    return unique; // no "All" for checkboxes
+  }, [baseFiltered]);
+
+
+  /** STEP 3 — Apply City + Category filters AFTER dynamic lists are computed */
 
   const filteredClinics = useMemo(() => {
-    return clinics.filter((clinic) => {
-      // Filter by type
-      if (!filters.types.includes(clinic.type)) {
-        return false;
-      }
+    let data = baseFiltered;
 
-      // Filter by specialties (if any selected)
-      if (filters.specialties.length > 0) {
-        const hasMatchingSpecialty = filters.specialties.some((spec) =>
-          clinic.focus.includes(spec)
+    // City filter
+    if (filters.city !== "All") {
+      data = data.filter((c) => c.city === filters.city);
+    }
+
+    // Category multiselect
+    if (filters.selectedCategories.length > 0) {
+      data = data.filter((c) => {
+        const catList = [c.category1, c.category2, c.category3]
+          .filter(Boolean)
+          .flatMap((str) =>
+            str!
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0)
+          );
+
+        return filters.selectedCategories.every((cat) =>
+          catList.includes(cat)
         );
-        if (!hasMatchingSpecialty) {
-          return false;
-        }
-      }
+      });
+    }
 
-      // Filter by distance (if user location is available)
-      if (userLocation) {
-        const distance = calculateDistance(
-          userLocation.lat,
-          userLocation.lon,
-          clinic.lat,
-          clinic.lon
-        );
-        if (distance > filters.maxDistance) {
-          return false;
-        }
-      }
+    return data;
+  }, [baseFiltered, filters.city, filters.selectedCategories]);
 
-      // Filter by availability options
-      if (filters.online !== null && clinic.online !== filters.online) {
-        return false;
-      }
-      if (
-        filters.multilingual !== null &&
-        clinic.multilingual !== filters.multilingual
-      ) {
-        return false;
-      }
-      if (
-        filters.acceptsUndiagnosed !== null &&
-        clinic.acceptsUndiagnosed !== filters.acceptsUndiagnosed
-      ) {
-        return false;
-      }
-      if (
-        filters.noGuardianRequired !== null &&
-        clinic.noGuardianRequired !== filters.noGuardianRequired
-      ) {
-        return false;
-      }
 
-      return true;
-    });
-  }, [clinics, filters, userLocation]);
-
-  const updateFilter = <K extends keyof ClinicFilters>(
+  /** Update function */
+  function updateFilter<K extends keyof ClinicFilters>(
     key: K,
     value: ClinicFilters[K]
-  ) => {
+  ) {
     setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const toggleType = (type: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      types: prev.types.includes(type)
-        ? prev.types.filter((t) => t !== type)
-        : [...prev.types, type]
-    }));
-  };
-
-  const toggleSpecialty = (specialty: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      specialties: prev.specialties.includes(specialty)
-        ? prev.specialties.filter((s) => s !== specialty)
-        : [...prev.specialties, specialty]
-    }));
-  };
+  }
 
   return {
     filters,
-    filteredClinics,
     updateFilter,
-    toggleType,
-    toggleSpecialty
+    cities: dynamicCities,
+    categories: dynamicCategories,
+    filteredClinics,
   };
 }
-
