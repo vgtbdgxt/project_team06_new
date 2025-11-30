@@ -1,55 +1,62 @@
-import { useState, useEffect } from 'react';
+// src/hooks/useUserLocation.ts
 
-export interface UserLocation {
-  lat: number;
-  lon: number;
-  error: string | null;
-}
-
-const DEFAULT_LOCATION: UserLocation = {
-  lat: 34.0522, // Los Angeles default
-  lon: -118.2437,
-  error: null
-};
+import { useState } from "react";
 
 export function useUserLocation() {
-  const [location, setLocation] = useState<UserLocation>(DEFAULT_LOCATION);
+  const [location, setLocation] = useState<{
+    lat: number;
+    lon: number;
+    error: string | null;
+  }>({
+    lat: 0,
+    lon: 0,
+    error: null,
+  });
+
   const [isLoading, setIsLoading] = useState(false);
 
-  const requestLocation = () => {
+  // NEW FLAG — used to control map auto-centering behavior
+  const [justLocated, setJustLocated] = useState(false);
+
+  function requestLocation() {
     if (!navigator.geolocation) {
-      setLocation({
-        ...DEFAULT_LOCATION,
-        error: 'Geolocation is not supported by your browser'
-      });
+      setLocation((prev) => ({
+        ...prev,
+        error: "Geolocation is not supported by your browser.",
+      }));
       return;
     }
 
     setIsLoading(true);
+
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      (pos) => {
         setLocation({
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-          error: null
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          error: null,
         });
+
+        // Set flag → tell MapView to center ONE TIME
+        setJustLocated(true);
+
         setIsLoading(false);
       },
-      (error) => {
-        setLocation({
-          ...DEFAULT_LOCATION,
-          error: error.message || 'Unable to retrieve your location'
-        });
+      () => {
+        setLocation((prev) => ({
+          ...prev,
+          error: "Unable to retrieve your location.",
+        }));
         setIsLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
       }
     );
+  }
+
+  return {
+    location,
+    isLoading,
+    requestLocation,
+    justLocated,
+    setJustLocated,
   };
-
-  return { location, isLoading, requestLocation };
 }
-

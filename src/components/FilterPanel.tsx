@@ -1,182 +1,103 @@
-import { ClinicFilters } from '../hooks/useClinicFilters';
+// src/components/FilterPanel.tsx
 
-interface FilterPanelProps {
+import type { ClinicFilters } from "../hooks/useClinicFilters";
+
+interface Props {
   filters: ClinicFilters;
-  onToggleType: (type: string) => void;
-  onToggleSpecialty: (specialty: string) => void;
   onUpdateFilter: <K extends keyof ClinicFilters>(
     key: K,
     value: ClinicFilters[K]
   ) => void;
+  cities: string[];
+  categories: string[];
 }
 
-const CLINIC_TYPES = [
-  { value: 'hospital', label: 'Hospital' },
-  { value: 'outpatient', label: 'Outpatient' },
-  { value: 'specialized', label: 'Specialized Program' },
-  { value: 'urgent_care', label: 'Urgent Care' }
-];
+export function FilterPanel({ filters, onUpdateFilter, cities, categories }: Props) {
+  const toggleCategory = (cat: string) => {
+    const current = filters.selectedCategories;
 
-const SPECIALTIES = [
-  { value: 'anxiety', label: 'Anxiety' },
-  { value: 'depression', label: 'Depression' },
-  { value: 'cbt', label: 'CBT' },
-  { value: 'trauma', label: 'Trauma' },
-  { value: 'medication', label: 'Medication' },
-  { value: 'family', label: 'Family / Couples' }
-];
+    const next = current.includes(cat)
+      ? current.filter((c) => c !== cat)
+      : [...current, cat];
 
-export function FilterPanel({
-  filters,
-  onToggleType,
-  onToggleSpecialty,
-  onUpdateFilter
-}: FilterPanelProps) {
+    onUpdateFilter("selectedCategories", next);
+  };
+
   return (
-    <div className="filter-panel p-3 h-100 overflow-auto">
-      <h3 className="h5 mb-3">Filters</h3>
+    <div className="p-3">
+      <h5 className="mb-3">Filters</h5>
 
-      {/* Maximum Distance Slider */}
-      <div className="mb-4">
-        <label htmlFor="max-distance" className="form-label">
-          Maximum Distance: <strong>{filters.maxDistance} km</strong>
+      {/* Search */}
+      <div className="mb-3">
+        <label className="form-label">Search</label>
+        <input
+          className="form-control"
+          placeholder="Name, program info, city..."
+          value={filters.search}
+          onChange={(e) => onUpdateFilter("search", e.target.value)}
+        />
+      </div>
+
+      {/* City */}
+      <div className="mb-3">
+        <label className="form-label">City</label>
+        <select
+          className="form-select"
+          value={filters.city}
+          onChange={(e) => onUpdateFilter("city", e.target.value)}
+        >
+          {cities.map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Categories (Dynamic) */}
+      <div className="mb-3">
+        <label className="form-label">Categories</label>
+        <div className="border rounded p-2" style={{ maxHeight: 250, overflowY: "auto" }}>
+          {categories.length === 0 && (
+            <div className="text-muted small">No matching categories</div>
+          )}
+
+          {categories.map((cat) => {
+            const id = `cat-${cat}`;
+            const checked = filters.selectedCategories.includes(cat);
+
+            return (
+              <div className="form-check mb-1" key={cat}>
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id={id}
+                  checked={checked}
+                  onChange={() => toggleCategory(cat)}
+                />
+                <label htmlFor={id} className="form-check-label">
+                  {cat}
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Distance */}
+      <div className="mb-3">
+        <label className="form-label">
+          Maximum Distance: {filters.maxDistance} km
         </label>
         <input
           type="range"
-          className="form-range"
-          id="max-distance"
-          min="1"
-          max="20"
-          step="1"
+          min={1}
+          max={100}
           value={filters.maxDistance}
           onChange={(e) =>
-            onUpdateFilter('maxDistance', parseInt(e.target.value))
+            onUpdateFilter("maxDistance", Number(e.target.value))
           }
+          className="form-range"
         />
-        <div className="form-text">Adjust to filter clinics by distance</div>
-      </div>
-
-      {/* Clinic Type Filters */}
-      <div className="mb-4">
-        <h5 className="h6 mb-2">Clinic Type</h5>
-        <div className="form-check-group">
-          {CLINIC_TYPES.map((type) => (
-            <div className="form-check" key={type.value}>
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id={`type-${type.value}`}
-                checked={filters.types.includes(type.value)}
-                onChange={() => onToggleType(type.value)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor={`type-${type.value}`}
-              >
-                {type.label}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Specialty Filters */}
-      <div className="mb-4">
-        <h5 className="h6 mb-2">Focus / Specialty</h5>
-        <div className="form-check-group">
-          {SPECIALTIES.map((specialty) => (
-            <div className="form-check" key={specialty.value}>
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id={`specialty-${specialty.value}`}
-                checked={filters.specialties.includes(specialty.value)}
-                onChange={() => onToggleSpecialty(specialty.value)}
-              />
-              <label
-                className="form-check-label"
-                htmlFor={`specialty-${specialty.value}`}
-              >
-                {specialty.label}
-              </label>
-            </div>
-          ))}
-        </div>
-        <div className="form-text small text-muted">
-          If none selected, all specialties are shown.
-        </div>
-      </div>
-
-      {/* Availability Filters */}
-      <div className="mb-4">
-        <h5 className="h6 mb-2">Availability</h5>
-        <div className="form-check">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id="filter-online"
-            checked={filters.online === true}
-            onChange={(e) =>
-              onUpdateFilter('online', e.target.checked ? true : null)
-            }
-          />
-          <label className="form-check-label" htmlFor="filter-online">
-            Offers online / telehealth
-          </label>
-        </div>
-        <div className="form-check">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id="filter-multilingual"
-            checked={filters.multilingual === true}
-            onChange={(e) =>
-              onUpdateFilter('multilingual', e.target.checked ? true : null)
-            }
-          />
-          <label className="form-check-label" htmlFor="filter-multilingual">
-            Multilingual support
-          </label>
-        </div>
-        <div className="form-check">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id="filter-accepts-undiagnosed"
-            checked={filters.acceptsUndiagnosed === true}
-            onChange={(e) =>
-              onUpdateFilter(
-                'acceptsUndiagnosed',
-                e.target.checked ? true : null
-              )
-            }
-          />
-          <label
-            className="form-check-label"
-            htmlFor="filter-accepts-undiagnosed"
-          >
-            Accepts undiagnosed / self-referred
-          </label>
-        </div>
-        <div className="form-check">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id="filter-no-guardian"
-            checked={filters.noGuardianRequired === true}
-            onChange={(e) =>
-              onUpdateFilter(
-                'noGuardianRequired',
-                e.target.checked ? true : null
-              )
-            }
-          />
-          <label className="form-check-label" htmlFor="filter-no-guardian">
-            No guardian / family requirement
-          </label>
-        </div>
       </div>
     </div>
   );
 }
-
