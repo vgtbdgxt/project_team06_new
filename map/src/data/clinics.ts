@@ -1,4 +1,10 @@
+
 // src/data/clinics.ts
+//
+// Normalisation pipeline that converts the ArcGIS style JSON
+// in `clinics_raw.json` into a clean list of `Clinic` objects
+// consumed by the React app.
+
 import raw from "./clinics_raw.json";
 import type { Clinic } from "../types/Clinic";
 
@@ -10,88 +16,54 @@ interface ArcGisFeature {
 const features: ArcGisFeature[] = (raw as any).features ?? raw ?? [];
 
 /**
- * convert a single ArcGIS feature to Clinic
+ * Convert a single ArcGIS feature into our `Clinic` model.
+ * If we cannot determine a valid latitude / longitude, `null`
+ * is returned and the record is skipped.
  */
 function normalizeClinic(f: ArcGisFeature): Clinic | null {
   const a = f.attributes ?? {};
 
-  // ------------------------------
-  // name extraction
-  // ------------------------------
-  const rawOrg = (a["org_name"] ?? "").toString().trim();
-  const programNameLower = (a["name"] ?? "").toString().trim();
-  const programNameUpper = (a["Name"] ?? "").toString().trim();
+  const lat =
+    typeof a.latitude === "number"
+      ? a.latitude
+      : typeof a.POINT_Y === "number"
+      ? a.POINT_Y
+      : f.geometry?.y;
 
-  //
-  const finalName =
-    rawOrg ||
-    programNameUpper ||
-    programNameLower ||
-    "Unnamed Program";
+  const lon =
+    typeof a.longitude === "number"
+      ? a.longitude
+      : typeof a.POINT_X === "number"
+      ? a.POINT_X
+      : f.geometry?.x;
 
-  // ------------------------------
-  // lat n long
-  // ------------------------------
-  const latitude =
-    a.latitude ??
-    a.LATITUDE ??
-    a.POINT_Y ??
-    f.geometry?.y;
-
-  const longitude =
-    a.longitude ??
-    a.LONGITUDE ??
-    a.POINT_X ??
-    f.geometry?.x;
-
-  if (latitude == null || longitude == null) return null;
-
-  // ------------------------------
-  // category string processing
-  // ------------------------------
-  const categories = [a.cat1, a.cat2, a.cat3]
-    .filter(Boolean)
-    .flatMap((entry: string) =>
-      entry
-        .split(",")
-        .map((s: string) => s.trim())
-        .filter((s: string) => s.length > 0)
-    );
-
-  // ------------------------------
-  //  URL processing
-  // ------------------------------
-  let safeUrl: string | null = a.url ?? a.link ?? null;
-  if (safeUrl && typeof safeUrl === "string") {
-    safeUrl = safeUrl.trim();
-    if (
-      safeUrl &&
-      !safeUrl.startsWith("http://") &&
-      !safeUrl.startsWith("https://")
-    ) {
-      safeUrl = "https://" + safeUrl;
-    }
+  if (typeof lat !== "number" || typeof lon !== "number") {
+    return null;
   }
 
+  const rawName: string =
+    (a.name ?? a.Name ?? a.org_name ?? "").toString().trim();
+
+  const name = rawName || "Unknown Program";
+
   const clinic: Clinic = {
-    id: a.OBJECTID ?? a.objectid ?? Math.random(),
+    id: typeof a.OBJECTID === "number" ? a.OBJECTID : Math.random(),
+    name,
+    orgName: a.org_name ?? null,
 
-    name: finalName,
-    orgName: rawOrg || null,
+    address1: (a.addrln1 ?? a.address1 ?? "").toString(),
+    address2: (a.addrln2 ?? a.address2 ?? null) || null,
+    city: (a.city ?? "").toString(),
+    state: (a.state ?? "CA").toString(),
+    zip: a.zip ? String(a.zip) : null,
 
-    address1: a.addrln1 ?? "",
-    address2: a.addrln2 ?? null,
-    city: a.city ?? "",
-    state: a.state ?? "CA",
-    zip: a.zip ?? null,
-
-    latitude,
-    longitude,
+    latitude: lat,
+    longitude: lon,
 
     phones: a.phones ?? null,
-    hours: a.hours ?? null,
-    url: safeUrl,
     email: a.email ?? null,
+    url: a.url ?? a.link ?? null,
+    hours: a.hours ?? null,
 
     description: a.description ?? null,
     info1: a.info1 ?? null,
@@ -100,24 +72,20 @@ function normalizeClinic(f: ArcGisFeature): Clinic | null {
     category1: a.cat1 ?? null,
     category2: a.cat2 ?? null,
     category3: a.cat3 ?? null,
-    // categories
   };
 
   return clinic;
 }
 
 /**
- * export final clinic list
+ * Export final clinic list
  */
 export const clinics: Clinic[] = features
   .map(normalizeClinic)
   .filter((c): c is Clinic => c !== null);
 
-
-const debugClinic10049 = clinics.find(
-  (c) => c.id === 10049
-);
-if (debugClinic10049) {
-
-  console.log("DEBUG clinic 10049:", debugClinic10049);
+// Small debug log to verify that the transformation worked during development.
+if (process.env.NODE_ENV === "development") {
+  // eslint-disable-next-line no-console
+  console.log("Loaded clinics:", clinics.length);
 }

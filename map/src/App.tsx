@@ -1,3 +1,4 @@
+
 // src/App.tsx
 
 import { useMemo, useState } from "react";
@@ -9,152 +10,140 @@ import { useUserLocation } from "./hooks/useUserLocation";
 import { useClinicFilters } from "./hooks/useClinicFilters";
 
 import type { Clinic } from "./types/Clinic";
+import { clinics as clinicsFromData } from "./data/clinics";
+import {
+  createDefaultExposomeSettings,
+  type ExposomeSettings,
+  type RouteBurdenResult,
+} from "./types/Exposome";
 
-import rawData from "./data/clinics_raw.json";
 import "./App.css";
 
-function normalizeClinics(data: any): Clinic[] {
-  return data.features
-    .map((f: any) => {
-      const a = f.attributes;
-
-      const lat =
-        a.latitude ??
-        a.POINT_Y ??
-        f.geometry?.y ??
-        null;
-
-      const lon =
-        a.longitude ??
-        a.POINT_X ??
-        f.geometry?.x ??
-        null;
-
-      if (lat == null || lon == null) return null;
-
-      return {
-        id: a.OBJECTID,
-        name: a.Name || a.org_name || "Unknown Program",
-
-        orgName: a.org_name ?? null,
-        address1: a.addrln1 ?? "",
-        address2: a.addrln2 ?? null,
-        city: a.city ?? "",
-        state: a.state ?? "CA",
-        zip: a.zip ?? null,
-
-        latitude: lat,
-        longitude: lon,
-
-        phones: a.phones ?? null,
-        hours: a.hours ?? null,
-        url: a.url ?? a.link ?? null,
-        email: a.email ?? null,
-
-        description: a.description ?? null,
-        info1: a.info1 ?? null,
-        info2: a.info2 ?? null,
-
-        category1: a.cat1 ?? null,
-        category2: a.cat2 ?? null,
-        category3: a.cat3 ?? null,
-      };
-    })
-    .filter(Boolean) as Clinic[];
-}
-
 function App() {
-  // Normalize the dataset
-  const clinics = useMemo(() => normalizeClinics(rawData), []);
+  // Normalised clinics
+  const clinics: Clinic[] = useMemo(() => clinicsFromData, []);
 
-  // User location hook (with justLocated flag)
+  // User location
   const {
     location,
-    isLoading,
+    isLoading: isLocating,
     requestLocation,
-    justLocated,
-    setJustLocated,
   } = useUserLocation();
 
-  const userLocation = location.error
-    ? null
-    : { lat: location.lat, lon: location.lon };
+  const userLocation =
+    location.error || (location.lat === 0 && location.lon === 0)
+      ? null
+      : { lat: location.lat, lon: location.lon };
 
-  // Filters hook (now includes categories)
+  // Filtered clinic list
   const {
     filters,
-    filteredClinics,
     updateFilter,
-    cities,
+    filteredClinics,
     categories,
+    cities,
   } = useClinicFilters(clinics, userLocation);
 
-  const [selectedClinic, setSelectedClinic] =
-    useState<Clinic | null>(null);
+  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+  const [routeDistanceMiles, setRouteDistanceMiles] = useState<number | null>(
+    null
+  );
+
+  // Exposome settings + route burden
+  const [exposomeSettings, setExposomeSettings] = useState<ExposomeSettings>(
+    createDefaultExposomeSettings()
+  );
+  const [routeBurden, setRouteBurden] = useState<RouteBurdenResult | null>(
+    null
+  );
+
+  const handleSelectClinic = (clinic: Clinic) => {
+    setSelectedClinic(clinic);
+  };
 
   return (
-    <div className="app-container d-flex flex-column vh-100">
+    <div className="app-root d-flex flex-column" style={{ height: "100vh" }}>
       {/* HEADER */}
-      <header className="bg-primary text-white p-3 shadow-sm">
-        <div className="container-fluid d-flex justify-content-between">
-          <h1 className="h4 mb-0">LA County Mental Health Programs Map</h1>
-
-          <button
-            className="btn btn-light btn-sm"
-            onClick={requestLocation}
-            disabled={isLoading}
-          >
-            {isLoading ? "Locating..." : "📍 Locate Me"}
-          </button>
-        </div>
-
-        {location.error && (
-          <div className="alert alert-warning mt-2 py-1">
-            <small>{location.error}</small>
+      <header className="bg-white border-bottom py-2">
+        <div className="container-fluid d-flex justify-content-between align-items-center">
+          <div>
+            <h4 className="mb-0">PATH: Mental‑Health Accessibility Map</h4>
+            <small className="text-muted">
+              Explore mental‑health programs in LA and the environmental burden
+              of getting there.
+            </small>
           </div>
-        )}
+          <div className="d-flex align-items-center gap-2">
+            {userLocation && !location.error && (
+              <span className="badge bg-success-subtle text-success-emphasis">
+                Location on
+              </span>
+            )}
+            {location.error && (
+              <span className="badge bg-danger-subtle text-danger-emphasis">
+                {location.error}
+              </span>
+            )}
+            <button
+              className="btn btn-outline-primary btn-sm"
+              onClick={requestLocation}
+              disabled={isLocating}
+            >
+              {isLocating ? "Locating…" : "Use my location"}
+            </button>
+          </div>
+        </div>
       </header>
 
       {/* MAIN LAYOUT */}
-      <div className="flex-grow-1 d-flex" style={{ overflow: "hidden" }}>
-        {/* LEFT – FILTER PANEL */}
-        <aside className="bg-light border-end" style={{ width: 300 }}>
+      <div className="flex-grow-1 d-flex">
+        {/* LEFT PANEL: filters + environment settings */}
+        <div style={{ width: 340, minWidth: 320 }}>
           <FilterPanel
             filters={filters}
             onUpdateFilter={updateFilter}
             cities={cities}
-            categories={categories}   // NEW
+            categories={categories}
+            exposomeSettings={exposomeSettings}
+            onChangeExposome={setExposomeSettings}
           />
-        </aside>
+        </div>
 
-        {/* MAP */}
-        <main className="flex-grow-1 position-relative">
+        {/* CENTER: map */}
+        <div className="flex-grow-1">
           <MapView
-            clinics={filteredClinics}
+            clinics={clinics}
+            filteredClinics={filteredClinics}
             selectedClinic={selectedClinic}
+            onSelectClinic={handleSelectClinic}
             userLocation={userLocation}
-            maxDistance={filters.maxDistance}
-            onClinicSelect={setSelectedClinic}
-            justLocated={justLocated}
-            setJustLocated={setJustLocated}
+            onRouteDistanceChange={setRouteDistanceMiles}
+            exposomeSettings={exposomeSettings}
+            onRouteBurdenChange={setRouteBurden}
           />
-        </main>
+        </div>
 
-        {/* RIGHT – DETAILS PANEL */}
-        <aside className="bg-white border-start" style={{ width: 350 }}>
+        {/* RIGHT PANEL: details */}
+        <div style={{ width: 360, minWidth: 320 }} className="border-start">
           <ClinicDetails
             clinic={selectedClinic}
             userLocation={userLocation}
+            routeDistance={routeDistanceMiles}
+            routeBurden={routeBurden}
           />
-        </aside>
+        </div>
       </div>
 
       {/* FOOTER */}
       <footer className="bg-light border-top p-2">
-        <div className="container-fluid">
-          <small className="text-muted">
+        <div className="container-fluid d-flex justify-content-between small">
+          <span>
             Showing {filteredClinics.length} of {clinics.length} programs
-          </small>
+          </span>
+          <span className="text-muted">
+            Environment layers and burden score are mocked for demonstration
+            purposes only.
+          </span>
         </div>
       </footer>
     </div>
