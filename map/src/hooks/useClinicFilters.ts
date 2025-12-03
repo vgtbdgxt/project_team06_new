@@ -2,13 +2,12 @@
 
 import { useMemo, useState } from "react";
 import type { Clinic } from "../types/Clinic";
-import { calculateDistance } from "../utils/distance";
 
 export interface ClinicFilters {
   search: string;
   city: string;
+  maxDistanceMiles: number;
   selectedCategories: string[];
-  maxDistance: number;
 }
 
 export function useClinicFilters(
@@ -18,121 +17,113 @@ export function useClinicFilters(
   const [filters, setFilters] = useState<ClinicFilters>({
     search: "",
     city: "All",
+    maxDistanceMiles: 7,
     selectedCategories: [],
-    maxDistance: 10,
   });
 
-  /** STEP 1 — Always apply Search + Distance first */
-  const baseFiltered = useMemo(() => {
-    let data = clinics.map((c) => ({ ...c }));
+  const updateFilter = <K extends keyof ClinicFilters>(
+    key: K,
+    value: ClinicFilters[K]
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
-    // Distance filter
-    if (userLocation) {
-      data = data
-        .map((c) => ({
-          ...c,
-          distanceKm: calculateDistance(
+  // Compute categories from dataset
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    clinics.forEach((c) => {
+      [c.category1, c.category2, c.category3]
+        .filter(Boolean)
+        .forEach((cat: any) => {
+          cat
+            .split(",")
+            .map((x: string) => x.trim())
+            .forEach((x) => set.add(x));
+        });
+    });
+    return Array.from(set).sort();
+  }, [clinics]);
+
+  // Compute cities for dropdown
+  const cities = useMemo(() => {
+    const set = new Set<string>(["All"]);
+    clinics.forEach((c) => c.city && set.add(c.city));
+    return Array.from(set).sort();
+  }, [clinics]);
+
+  // Great-circle distance (miles)
+  function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const R = 3958.8; // Earth radius in miles
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  // Filtering logic
+  const filteredClinics = useMemo(() => {
+    return clinics
+      .map((c) => {
+        let dist = null;
+        if (userLocation) {
+          dist = distanceMiles(
             userLocation.lat,
             userLocation.lon,
             c.latitude,
             c.longitude
-          ),
-        }))
-        .filter((c) => c.distanceKm! <= filters.maxDistance);
-    }
+          );
+        }
 
-    // Search filter
-    const q = filters.search.toLowerCase().trim();
-    if (q !== "") {
-      data = data.filter((c) => {
-        const fields = [
-          c.name,
-          c.orgName ?? "",
-          c.description ?? "",
-          c.city ?? "",
-        ].map((s) => s.toLowerCase());
+        return { ...c, distanceMiles: dist };
+      })
+      .filter((c) => {
+        // Search filter
+        if (
+          filters.search &&
+          !(
+            c.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+            c.city.toLowerCase().includes(filters.search.toLowerCase())
+          )
+        ) {
+          return false;
+        }
 
-        return fields.some((f) => f.includes(q));
-      });
-    }
+        // City filter
+        if (filters.city !== "All" && c.city !== filters.city) {
+          return false;
+        }
 
-    return data;
-  }, [clinics, userLocation, filters.search, filters.maxDistance]);
+        // OR category logic
+        if (filters.selectedCategories.length > 0) {
+          const clinicCats = [
+            c.category1,
+            c.category2,
+            c.category3,
+          ]
+            .filter(Boolean)
+            .flatMap((cc) => cc!.split(",").map((x) => x.trim()));
 
-
-  /** STEP 2 — Dynamic options: these depend on baseFiltered (NOT final filteredClinics) */
-
-  // Dynamic city list
-  const dynamicCities = useMemo(() => {
-    const cities = Array.from(
-      new Set(baseFiltered.map((c) => c.city).filter(Boolean))
-    ).sort();
-    return ["All", ...cities];
-  }, [baseFiltered]);
-
-  // Dynamic category list
-  const dynamicCategories = useMemo(() => {
-    const exploded = baseFiltered.flatMap((c) =>
-      [c.category1, c.category2, c.category3]
-        .filter(Boolean)
-        .flatMap((str) =>
-          str!
-            .split(",")
-            .map((s) => s.trim())
-            .filter((s) => s.length > 0)
-        )
-    );
-
-    const unique = Array.from(new Set(exploded)).sort();
-    return unique; // no "All" for checkboxes
-  }, [baseFiltered]);
-
-
-  /** STEP 3 — Apply City + Category filters AFTER dynamic lists are computed */
-
-  const filteredClinics = useMemo(() => {
-    let data = baseFiltered;
-
-    // City filter
-    if (filters.city !== "All") {
-      data = data.filter((c) => c.city === filters.city);
-    }
-
-    // Category multiselect
-    if (filters.selectedCategories.length > 0) {
-      data = data.filter((c) => {
-        const catList = [c.category1, c.category2, c.category3]
-          .filter(Boolean)
-          .flatMap((str) =>
-            str!
-              .split(",")
-              .map((s) => s.trim())
-              .filter((s) => s.length > 0)
+          const matches = filters.selectedCategories.some((cat) =>
+            clinicCats.includes(cat)
           );
 
-        return filters.selectedCategories.every((cat) =>
-          catList.includes(cat)
-        );
+          if (!matches) return false;
+        }
+
+        return true;
       });
-    }
-
-    return data;
-  }, [baseFiltered, filters.city, filters.selectedCategories]);
-
-
-  /** Update function */
-  function updateFilter<K extends keyof ClinicFilters>(
-    key: K,
-    value: ClinicFilters[K]
-  ) {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  }
+  }, [clinics, filters, userLocation]);
 
   return {
     filters,
     updateFilter,
-    cities: dynamicCities,
-    categories: dynamicCategories,
     filteredClinics,
+    categories,
+    cities,
   };
 }

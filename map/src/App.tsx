@@ -4,39 +4,36 @@ import { useMemo, useState } from "react";
 import { MapView } from "./components/MapView";
 import { FilterPanel } from "./components/FilterPanel";
 import { ClinicDetails } from "./components/ClinicDetails";
-
 import { useUserLocation } from "./hooks/useUserLocation";
 import { useClinicFilters } from "./hooks/useClinicFilters";
 
+import rawData from "./data/clinics_raw.json";
 import type { Clinic } from "./types/Clinic";
 
-import rawData from "./data/clinics_raw.json";
 import "./App.css";
 
+// FIXED name extraction
 function normalizeClinics(data: any): Clinic[] {
   return data.features
     .map((f: any) => {
-      const a = f.attributes;
+      const a = f.attributes ?? {};
 
-      const lat =
-        a.latitude ??
-        a.POINT_Y ??
-        f.geometry?.y ??
-        null;
+      const lat = a.latitude ?? a.POINT_Y ?? f.geometry?.y;
+      const lon = a.longitude ?? a.POINT_X ?? f.geometry?.x;
+      if (!lat || !lon) return null;
 
-      const lon =
-        a.longitude ??
-        a.POINT_X ??
-        f.geometry?.x ??
-        null;
+      const rawName =
+        (a.name ?? "").trim() ||
+        (a.Name ?? "").trim() ||
+        (a.org_name ?? "").trim();
 
-      if (lat == null || lon == null) return null;
+      const finalName = rawName || "Unknown Program";
 
       return {
-        id: a.OBJECTID,
-        name: a.Name || a.org_name || "Unknown Program",
-
+        id: a.OBJECTID ?? Math.random(),
+        name: finalName,
         orgName: a.org_name ?? null,
+
         address1: a.addrln1 ?? "",
         address2: a.addrln2 ?? null,
         city: a.city ?? "",
@@ -52,9 +49,6 @@ function normalizeClinics(data: any): Clinic[] {
         email: a.email ?? null,
 
         description: a.description ?? null,
-        info1: a.info1 ?? null,
-        info2: a.info2 ?? null,
-
         category1: a.cat1 ?? null,
         category2: a.cat2 ?? null,
         category3: a.cat3 ?? null,
@@ -64,13 +58,10 @@ function normalizeClinics(data: any): Clinic[] {
 }
 
 function App() {
-  // Normalize the dataset
   const clinics = useMemo(() => normalizeClinics(rawData), []);
 
-  // User location hook (with justLocated flag)
   const {
     location,
-    isLoading,
     requestLocation,
     justLocated,
     setJustLocated,
@@ -80,51 +71,63 @@ function App() {
     ? null
     : { lat: location.lat, lon: location.lon };
 
-  // Filters hook (now includes categories)
   const {
     filters,
-    filteredClinics,
     updateFilter,
-    cities,
+    filteredClinics,
     categories,
+    cities,
   } = useClinicFilters(clinics, userLocation);
 
-  const [selectedClinic, setSelectedClinic] =
-    useState<Clinic | null>(null);
+  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+  const [routeDistance, setRouteDistance] = useState<number | null>(null); // NEW
+
+  const programsWithin = filteredClinics
+    .filter((c) => c.distanceMiles && c.distanceMiles <= filters.maxDistanceMiles)
+    .sort((a, b) => Number(a.distanceMiles) - Number(b.distanceMiles));
 
   return (
-    <div className="app-container d-flex flex-column vh-100">
+    <div className="d-flex flex-column vh-100">
       {/* HEADER */}
       <header className="bg-primary text-white p-3 shadow-sm">
         <div className="container-fluid d-flex justify-content-between">
           <h1 className="h4 mb-0">LA County Mental Health Programs Map</h1>
 
-          <button
-            className="btn btn-light btn-sm"
-            onClick={requestLocation}
-            disabled={isLoading}
-          >
-            {isLoading ? "Locating..." : "📍 Locate Me"}
+          <button className="btn btn-light btn-sm" onClick={requestLocation}>
+            📍 Locate Me
           </button>
         </div>
-
-        {location.error && (
-          <div className="alert alert-warning mt-2 py-1">
-            <small>{location.error}</small>
-          </div>
-        )}
       </header>
 
-      {/* MAIN LAYOUT */}
+      {/* MAIN */}
       <div className="flex-grow-1 d-flex" style={{ overflow: "hidden" }}>
-        {/* LEFT – FILTER PANEL */}
+        {/* LEFT PANEL */}
         <aside className="bg-light border-end" style={{ width: 300 }}>
           <FilterPanel
             filters={filters}
             onUpdateFilter={updateFilter}
             cities={cities}
-            categories={categories}   // NEW
+            categories={categories}
           />
+
+          <div className="mt-3 px-3 pb-4" style={{ maxHeight: "35vh", overflowY: "auto" }}>
+            <h6 className="fw-bold">
+              Programs Within {filters.maxDistanceMiles} miles ({programsWithin.length})
+            </h6>
+
+            <div className="border rounded p-2">
+              {programsWithin.map((p) => (
+                <div
+                  key={p.id}
+                  className="small mb-1"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setSelectedClinic(p)}
+                >
+                  • {p.name}
+                </div>
+              ))}
+            </div>
+          </div>
         </aside>
 
         {/* MAP */}
@@ -132,19 +135,21 @@ function App() {
           <MapView
             clinics={filteredClinics}
             selectedClinic={selectedClinic}
-            userLocation={userLocation}
-            maxDistance={filters.maxDistance}
             onClinicSelect={setSelectedClinic}
+            userLocation={userLocation}
             justLocated={justLocated}
             setJustLocated={setJustLocated}
+            maxDistanceMiles={filters.maxDistanceMiles}
+            setRouteDistance={setRouteDistance} // NEW
           />
         </main>
 
-        {/* RIGHT – DETAILS PANEL */}
+        {/* DETAILS PANEL */}
         <aside className="bg-white border-start" style={{ width: 350 }}>
           <ClinicDetails
             clinic={selectedClinic}
             userLocation={userLocation}
+            routeDistance={routeDistance} // NEW
           />
         </aside>
       </div>

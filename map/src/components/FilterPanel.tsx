@@ -52,14 +52,18 @@ export function FilterPanel({ filters, onUpdateFilter, cities, categories }: Pro
         </select>
       </div>
 
-      {/* Categories (Dynamic) */}
+      {/* Categories */}
       <div className="mb-3">
         <label className="form-label">Categories</label>
-        <div className="border rounded p-2" style={{ maxHeight: 250, overflowY: "auto" }}>
-          {categories.length === 0 && (
-            <div className="text-muted small">No matching categories</div>
-          )}
 
+        <div
+          className="border rounded p-2"
+          style={{
+            maxHeight: "35vh",
+            overflowY: "auto",
+            paddingBottom: "70px", // 防止被 footer 遮挡
+          }}
+        >
           {categories.map((cat) => {
             const id = `cat-${cat}`;
             const checked = filters.selectedCategories.includes(cat);
@@ -82,18 +86,18 @@ export function FilterPanel({ filters, onUpdateFilter, cities, categories }: Pro
         </div>
       </div>
 
-      {/* Distance */}
+      {/* Max Distance */}
       <div className="mb-3">
         <label className="form-label">
-          Maximum Distance: {filters.maxDistance} km
+          Maximum Distance: {filters.maxDistanceMiles} miles
         </label>
         <input
           type="range"
           min={1}
-          max={100}
-          value={filters.maxDistance}
+          max={30}
+          value={filters.maxDistanceMiles}
           onChange={(e) =>
-            onUpdateFilter("maxDistance", Number(e.target.value))
+            onUpdateFilter("maxDistanceMiles", Number(e.target.value))
           }
           className="form-range"
         />

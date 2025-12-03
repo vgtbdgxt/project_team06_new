@@ -1,13 +1,15 @@
 // src/components/ClinicDetails.tsx
+
 import type { Clinic } from "../types/Clinic";
 import { calculateDistance } from "../utils/distance";
 
 interface Props {
   clinic: Clinic | null;
   userLocation: { lat: number; lon: number } | null;
+  routeDistance?: number | null; // NEW
 }
 
-export function ClinicDetails({ clinic, userLocation }: Props) {
+export function ClinicDetails({ clinic, userLocation, routeDistance }: Props) {
   if (!clinic) {
     return (
       <div className="p-3">
@@ -17,7 +19,7 @@ export function ClinicDetails({ clinic, userLocation }: Props) {
     );
   }
 
-  // Distance calculation
+  // Straight-line distance
   const distanceKm = userLocation
     ? calculateDistance(
       userLocation.lat,
@@ -29,7 +31,7 @@ export function ClinicDetails({ clinic, userLocation }: Props) {
 
   const distanceMiles = distanceKm ? distanceKm * 0.621371 : null;
 
-  // Category consolidation
+  // Collect categories
   const categories: string[] = [
     clinic.category1,
     clinic.category2,
@@ -44,14 +46,20 @@ export function ClinicDetails({ clinic, userLocation }: Props) {
     );
 
   return (
-    <div className="clinic-details p-3 overflow-auto" style={{ height: "100%" }}>
-      {/* NAME */}
+    <div className="p-3 overflow-auto" style={{ height: "100%" }}>
       <h5 className="fw-bold mb-1">{clinic.name}</h5>
 
-      {/* DISTANCE */}
-      {distanceMiles !== null && (
-        <span className="badge bg-primary mb-3">
-          {distanceMiles.toFixed(1)} miles away
+      {/* ROUTE DISTANCE - REAL MILES */}
+      {routeDistance != null && (
+        <span className="badge bg-info mb-2">
+          Route Distance: {routeDistance.toFixed(2)} miles
+        </span>
+      )}
+
+      {/* Straight line distance */}
+      {distanceMiles != null && (
+        <span className="badge bg-secondary mb-3 ms-2">
+          Straight-line: {distanceMiles.toFixed(2)} miles
         </span>
       )}
 
@@ -84,12 +92,7 @@ export function ClinicDetails({ clinic, userLocation }: Props) {
         {clinic.url && (
           <p className="mb-1">
             <strong>Website:</strong>{" "}
-            <a
-              href={clinic.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ wordBreak: "break-all" }}
-            >
+            <a href={clinic.url} target="_blank" rel="noopener noreferrer">
               {clinic.url}
             </a>
           </p>
@@ -105,12 +108,10 @@ export function ClinicDetails({ clinic, userLocation }: Props) {
       )}
 
       {/* PROGRAM INFO */}
-      {(clinic.description || clinic.info1 || clinic.info2) && (
+      {(clinic.description) && (
         <section className="mb-3">
           <h6>Program Info</h6>
-          {clinic.description && <p>{clinic.description}</p>}
-          {clinic.info1 && <p>{clinic.info1}</p>}
-          {clinic.info2 && <p>{clinic.info2}</p>}
+          <p>{clinic.description}</p>
         </section>
       )}
 

@@ -1,6 +1,6 @@
 // src/components/MapView.tsx
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -9,13 +9,14 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
-
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 
 import type { Clinic } from "../types/Clinic";
 
-// Fix default Leaflet icon paths (needed for Vite)
+// ----------------------------
+// Fix default marker icons
+// ----------------------------
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -26,9 +27,6 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-// ---------------------------------------------------------------------------
-// BLUE USER LOCATION MARKER
-// ---------------------------------------------------------------------------
 const userIcon = L.icon({
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
@@ -38,129 +36,74 @@ const userIcon = L.icon({
   iconAnchor: [12, 41],
 });
 
-// CLINIC MARKERS (color-coded)
 const clinicIcon = (color: string) =>
   L.divIcon({
     className: "",
     html: `<div style="
-      width:16px;
-      height:16px;
+      width:18px;
+      height:18px;
       border-radius:50%;
       background:${color};
       border:2px solid white;
-      box-shadow:0 0 6px rgba(0,0,0,0.4);
+      box-shadow:0 0 6px rgba(0,0,0,0.45);
     "></div>`,
   });
 
-// ---------------------------------------------------------------------------
-// Floating route distance overlay
-// ---------------------------------------------------------------------------
-function DistanceOverlay({ distance }: { distance: number | null }) {
-  if (!distance) return null;
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: "15px",
-        right: "15px",
-        background: "white",
-        padding: "8px 12px",
-        borderRadius: "6px",
-        boxShadow: "0 0 6px rgba(0,0,0,0.3)",
-        zIndex: 1000,
-        fontWeight: "bold",
-      }}
-    >
-      Route Distance: {distance} miles
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Recenter logic: only recenter on "Locate Me" click
-// ---------------------------------------------------------------------------
-function MapUpdater({
-  selectedClinic,
-  userLocation,
-  justLocated,
-  setJustLocated,
-}: any) {
+// ============================================================
+// Routing Component — draws route + returns route distance
+// ============================================================
+function Routing({ userLocation, clinic, onRouteDistance }: any) {
   const map = useMap();
-
-  // Center after user presses "Locate Me"
-  useEffect(() => {
-    if (justLocated && userLocation) {
-      map.setView([userLocation.lat, userLocation.lon], 13);
-      setJustLocated(false);
-    }
-  }, [justLocated, userLocation]);
-
-  // Slight pan on clinic click (no zoom)
-  useEffect(() => {
-    if (selectedClinic) {
-      map.panTo([selectedClinic.latitude, selectedClinic.longitude]);
-    }
-  }, [selectedClinic]);
-
-  return null;
-}
-
-// ---------------------------------------------------------------------------
-// RouteDrawer: Draw a real OSRM route + measure distance
-// ---------------------------------------------------------------------------
-function RouteDrawer({
-  userLocation,
-  selectedClinic,
-  setRouteDistance,
-}: {
-  userLocation: { lat: number; lon: number } | null;
-  selectedClinic: Clinic | null;
-  setRouteDistance: (dist: number | null) => void;
-}) {
-  const map = useMap();
+  const routingRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!userLocation || !selectedClinic) return;
+    if (!userLocation || !clinic) return;
 
-    setRouteDistance(null); // reset before drawing a new one
+    // Remove old route
+    if (routingRef.current) routingRef.current.remove();
 
+    // Create new routing control
     const control = L.Routing.control({
       waypoints: [
         L.latLng(userLocation.lat, userLocation.lon),
-        L.latLng(selectedClinic.latitude, selectedClinic.longitude),
+        L.latLng(clinic.latitude, clinic.longitude),
       ],
-      router: L.Routing.osrmv1({
-        serviceUrl: "https://router.project-osrm.org/route/v1",
-      }),
-      fitSelectedRoutes: true,
-      show: false,
+      show: false,              // ✨ Disable default panel
       addWaypoints: false,
       draggableWaypoints: false,
+      fitSelectedRoutes: true,
+      createMarker: () => null, // hide routing markers
       lineOptions: {
-        styles: [{ color: "#1d4ed8", weight: 5 }],
+        addWaypoints: false,
+        styles: [{ color: "#007bff", weight: 5 }],
       },
     })
-      .on("routesfound", function (e: any) {
-        const route = e.routes[0];
-        const meters = route.summary.totalDistance;
-        const miles = meters / 1609.34;
-
-        setRouteDistance(parseFloat(miles.toFixed(2)));
+      .on("routesfound", (e: any) => {
+        const summary = e.routes[0].summary;
+        const miles = summary.totalDistance * 0.000621371;
+        onRouteDistance(miles);
       })
       .addTo(map);
 
+    // ✨ Completely remove the default white instruction panel
+    const container = control.getContainer();
+    if (container) {
+      container.style.display = "none"; // Full hide
+    }
+
+    routingRef.current = control;
+
     return () => {
-      map.removeControl(control);
+      if (routingRef.current) map.removeControl(routingRef.current);
     };
-  }, [userLocation, selectedClinic]);
+  }, [userLocation, clinic, map, onRouteDistance]);
 
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// MAIN MAP VIEW (Named Export)
-// ---------------------------------------------------------------------------
+// ============================================================
+// Main Map Component
+// ============================================================
 export function MapView({
   clinics,
   selectedClinic,
@@ -168,6 +111,8 @@ export function MapView({
   userLocation,
   justLocated,
   setJustLocated,
+  maxDistanceMiles,
+  setRouteDistance,
 }: {
   clinics: Clinic[];
   selectedClinic: Clinic | null;
@@ -175,86 +120,67 @@ export function MapView({
   userLocation: { lat: number; lon: number } | null;
   justLocated: boolean;
   setJustLocated: (v: boolean) => void;
+  maxDistanceMiles: number;
+  setRouteDistance: (m: number | null) => void;
 }) {
-  const [routeDistance, setRouteDistance] = useState<number | null>(null);
-
-  // Clear distance when nothing selected
-  useEffect(() => {
-    if (!selectedClinic) setRouteDistance(null);
-  }, [selectedClinic]);
-
   return (
-    <div style={{ position: "relative", height: "100%", width: "100%" }}>
-      {/* Distance Box */}
-      <DistanceOverlay distance={routeDistance} />
+    <MapContainer
+      center={[34.05, -118.25]}
+      zoom={10}
+      style={{ height: "100%", width: "100%" }}
+    >
+      {/* Tiles */}
+      <TileLayer
+        attribution="&copy; OpenStreetMap contributors"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
 
-      <MapContainer
-        center={[34.05, -118.25]}
-        zoom={10}
-        style={{ height: "100%", width: "100%" }}
-        minZoom={8}
-        maxZoom={18}
-      >
-        {/* Map tiles */}
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+      {/* User marker */}
+      {userLocation && (
+        <Marker
+          position={[userLocation.lat, userLocation.lon]}
+          icon={userIcon}
+        >
+          <Popup>You are here</Popup>
+        </Marker>
+      )}
 
-        {/* Recenter logic */}
-        <MapUpdater
-          selectedClinic={selectedClinic}
-          userLocation={userLocation}
-          justLocated={justLocated}
-          setJustLocated={setJustLocated}
-        />
+      {/* Clinic markers */}
+      {clinics.map((c) => {
+        const dist = c.distanceMiles ?? Infinity;
+        const color =
+          dist <= 5 ? "green" : dist <= 10 ? "orange" : "red";
 
-        {/* Real route + distance calculation */}
-        <RouteDrawer
-          userLocation={userLocation}
-          selectedClinic={selectedClinic}
-          setRouteDistance={setRouteDistance}
-        />
-
-        {/* User location marker */}
-        {userLocation && (
+        return (
           <Marker
-            position={[userLocation.lat, userLocation.lon]}
-            icon={userIcon}
+            key={c.id}
+            position={[c.latitude, c.longitude]}
+            icon={clinicIcon(color)}
+            eventHandlers={{ click: () => onClinicSelect(c) }}
           >
-            <Popup>You are here</Popup>
+            <Popup>
+              <strong>{c.name}</strong>
+              <br />
+              {c.address1}
+              <br />
+              {c.city}, CA
+              <br />
+              {dist && !isNaN(dist) && (
+                <span>{dist.toFixed(1)} miles away</span>
+              )}
+            </Popup>
           </Marker>
-        )}
+        );
+      })}
 
-        {/* Clinic markers */}
-        {clinics.map((clinic) => {
-          const color =
-            clinic.distanceKm && clinic.distanceKm <= 5
-              ? "green"
-              : clinic.distanceKm && clinic.distanceKm <= 10
-                ? "orange"
-                : "red";
-
-          return (
-            <Marker
-              key={clinic.id}
-              position={[clinic.latitude, clinic.longitude]}
-              icon={clinicIcon(color)}
-              eventHandlers={{
-                click: () => onClinicSelect(clinic),
-              }}
-            >
-              <Popup>
-                <strong>{clinic.name}</strong>
-                <br />
-                {clinic.address1}
-                <br />
-                {clinic.city}, {clinic.state}
-              </Popup>
-            </Marker>
-          );
-        })}
-      </MapContainer>
-    </div>
+      {/* Routing */}
+      {userLocation && selectedClinic && (
+        <Routing
+          userLocation={userLocation}
+          clinic={selectedClinic}
+          onRouteDistance={setRouteDistance}
+        />
+      )}
+    </MapContainer>
   );
 }
