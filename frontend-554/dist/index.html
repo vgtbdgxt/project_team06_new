@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PATH — Psychological Access To Help</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            color: #f2e0dc;
+            background: radial-gradient(ellipse at bottom, #151626 0%, #090A0D 100%);
+            scroll-behavior: smooth;
+        }
+
+        /* Navigation Bar - Glassmorphism Effect */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 10000 !important;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(-20px);
+            
+            /* 半透明玻璃核心 + 白色渐变 */
+            background: linear-gradient(to bottom, 
+                rgba(255, 255, 255, 0.2) 0%, 
+                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0.08) 100%);
+            backdrop-filter: blur(18px) saturate(180%);
+            -webkit-backdrop-filter: blur(18px) saturate(180%);
+            
+            /* 玻璃边缘高光 */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+        }
+
+        .navbar.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+
+        .nav-links li {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        .nav-links li.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: opacity 0.3s, transform 0.3s;
+            display: inline-block;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.6;
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section with Neural Background */
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at bottom, #151626 0%, #090A0D 100%);
+            z-index: 1;
+        }
+
+        #neuralCanvas {
+            display: block;
+            filter: contrast(1.1) brightness(1.1);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: #f2e0dc;
+            padding: 0 20px;
+        }
+
+        .hero-tagline {
+            font-size: 96px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 0.9;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            opacity: 0;
+        }
+
+        .hero-tagline.visible {
+            opacity: 1;
+        }
+
+        .hero-tagline .line {
+            display: block;
+        }
+
+        .hero-tagline .word {
+            display: inline-block;
+            margin-right: 0.3em;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .hero-tagline .word.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        /* 空心字效果 - 第二行 */
+        .hero-tagline .outline-line .word {
+            color: transparent;
+            -webkit-text-stroke: 1px #f2e0dc;
+        }
+
+        .get-started-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            border-radius: 12px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            cursor: pointer;
+            opacity: 0;
+            transform: scale(0.9);
+            
+            /* 半透明玻璃核心 + 白色渐变（更透明） */
+            background: linear-gradient(to bottom, 
+                rgba(255, 255, 255, 0.12) 0%, 
+                rgba(255, 255, 255, 0.08) 50%,
+                rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(18px) saturate(180%);
+            -webkit-backdrop-filter: blur(18px) saturate(180%);
+            
+            /* 玻璃边缘高光 */
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .get-started-btn.visible {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.5s ease-out 1s, transform 0.5s ease-out 1s;
+        }
+
+        .get-started-btn:hover {
+            background: linear-gradient(to bottom, 
+                rgba(255, 255, 255, 0.18) 0%, 
+                rgba(255, 255, 255, 0.12) 50%,
+                rgba(255, 255, 255, 0.08) 100%);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        .get-started-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Section Styles */
+        .section {
+            min-height: 100vh;
+            padding: 120px 40px 80px;
+            max-width: 1200px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(50px);
+            background: radial-gradient(ellipse at bottom, #151626 0%, #090A0D 100%);
+            color: #f2e0dc;
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 60px;
+            border-bottom: 1px solid rgba(242, 224, 220, 0.3);
+            padding-bottom: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            color: #f2e0dc;
+        }
+
+        .section-title.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.6s ease-out 0.2s, transform 0.6s ease-out 0.2s;
+        }
+
+        .section-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #f2e0dc;
+        }
+
+        /* Map Section */
+        .map-placeholder {
+            width: 100%;
+            height: 600px;
+            background: rgba(15, 16, 26, 0.5);
+            border: 1px solid rgba(242, 224, 220, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(242, 224, 220, 0.6);
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(30px);
+            border-radius: 12px;
+        }
+
+        .map-placeholder.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.6s ease-out 0.4s, transform 0.6s ease-out 0.4s;
+        }
+
+        /* Voronoi Section */
+        .voronoi-placeholder {
+            width: 100%;
+            height: 600px;
+            background: rgba(15, 16, 26, 0.5);
+            border: 1px solid rgba(242, 224, 220, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(242, 224, 220, 0.6);
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(30px);
+            border-radius: 12px;
+        }
+
+        .voronoi-placeholder.visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.6s ease-out 0.4s, transform 0.6s ease-out 0.4s;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-links {
+                gap: 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .hero-tagline {
+                font-size: 64px;
+                letter-spacing: -0.5px;
+                line-height: 1.1;
+            }
+
+            .section {
+                padding: 100px 20px 60px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="logo">PATH</div>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="/project_team06_new/map/">Map</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div id="canvas-container">
+            <canvas id="neuralCanvas"></canvas>
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-tagline" id="heroTagline">
+                <span class="line">
+                    <span class="word">Find</span>
+                    <span class="word">support.</span>
+                </span>
+                <span class="line outline-line">
+                    <span class="word">Find</span>
+                    <span class="word">your</span>
+                    <span class="word">safe</span>
+                    <span class="word">path.</span>
+                </span>
+            </h1>
+            <a href="/project_team06_new/map/" class="get-started-btn" id="getStartedBtn">Get Started</a>
+        </div>
+    </section>
+
+
+    <script>
+        /**
+         * 神经宇宙可视化核心逻辑
+         * 结合了粒子系统、距离场检测和正弦波呼吸动画
+         */
+
+        const canvas = document.getElementById('neuralCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+        let backgroundStars = [];
+        const PARTICLE_COUNT = 165;
+        const STAR_COUNT = 150;
+        const CONNECTION_DISTANCE = 130;
+        const MOUSE_RADIUS = 200;
+
+        const mouse = { x: -1000, y: -1000 };
+
+        /**
+         * 心理健康诊所数据数组
+         * 每个粒子通过索引模运算映射到对应的诊所数据
+         */
+        const clinics = [
+            { name: "Serenity Mind Center", state: "California", rating: 4.8 },
+            { name: "Horizon Behavioral Clinic", state: "New York", rating: 4.7 },
+            { name: "Evergreen Counseling Group", state: "Texas", rating: 4.6 },
+            { name: "Blue Lake Therapy Center", state: "Florida", rating: 4.5 },
+            { name: "Northstar Mental Wellness", state: "Illinois", rating: 4.9 },
+            { name: "Willow Path Counseling", state: "Washington", rating: 4.4 },
+            { name: "Compass Mental Health", state: "Colorado", rating: 4.8 },
+            { name: "Sunrise Behavioral Services", state: "Arizona", rating: 4.7 },
+            { name: "Garden State Therapy Center", state: "New Jersey", rating: 4.5 },
+            { name: "Harborview Counseling Clinic", state: "Massachusetts", rating: 4.6 },
+            { name: "Oak Bridge Mental Health", state: "Georgia", rating: 4.8 },
+            { name: "Calmwave Therapy Group", state: "Virginia", rating: 4.4 },
+            { name: "Silverline Psychology Clinic", state: "Ohio", rating: 4.6 },
+            { name: "Pacific Crest Therapy", state: "Oregon", rating: 4.7 },
+            { name: "Clearwater Behavioral Center", state: "Michigan", rating: 4.5 },
+            { name: "Bright Horizon Psych Clinic", state: "North Carolina", rating: 4.8 },
+            { name: "Healing Steps Counseling", state: "Pennsylvania", rating: 4.7 },
+            { name: "Redwood Mind Therapy", state: "California", rating: 4.6 },
+            { name: "Lighthouse Behavioral Clinic", state: "Texas", rating: 4.9 },
+            { name: "Riverbend Psychology Group", state: "Missouri", rating: 4.4 },
+            { name: "Soothing Minds Center", state: "Tennessee", rating: 4.7 },
+            { name: "Pathway Wellness Clinic", state: "Indiana", rating: 4.5 },
+            { name: "Unity Counseling Services", state: "Maryland", rating: 4.8 },
+            { name: "Alpine Mental Health Group", state: "Utah", rating: 4.6 },
+            { name: "Heartland Therapy Center", state: "Kansas", rating: 4.5 },
+            { name: "New Leaf Psych Care", state: "Minnesota", rating: 4.7 },
+            { name: "Sunridge Counseling Clinic", state: "Nevada", rating: 4.4 },
+            { name: "Tranquility Wellness Center", state: "Wisconsin", rating: 4.8 },
+            { name: "Beacon Hill Therapy", state: "Massachusetts", rating: 4.7 },
+            { name: "Riverstone Counseling Group", state: "New York", rating: 4.5 },
+            { name: "Mountainview Psychology Clinic", state: "Colorado", rating: 4.9 },
+            { name: "Cypress Grove Therapy", state: "Louisiana", rating: 4.6 },
+            { name: "Healing Harbor Clinic", state: "Florida", rating: 4.7 },
+            { name: "Maplewood Behavioral Center", state: "Kentucky", rating: 4.4 },
+            { name: "Westbridge Counseling", state: "Washington", rating: 4.8 },
+            { name: "Mindful Haven Center", state: "Connecticut", rating: 4.6 },
+            { name: "Calm Harbor Psych Group", state: "South Carolina", rating: 4.5 },
+            { name: "New Dawn Therapy Center", state: "Virginia", rating: 4.7 },
+            { name: "Blossom Wellness Clinic", state: "California", rating: 4.9 },
+            { name: "Aspen Ridge Mental Health", state: "Idaho", rating: 4.6 },
+            { name: "Clear Path Counseling", state: "North Dakota", rating: 4.4 },
+            { name: "Synergy Behavioral Center", state: "Nebraska", rating: 4.7 },
+            { name: "Shoreline Therapy Group", state: "Oregon", rating: 4.8 },
+            { name: "Renewed Hope Clinic", state: "Alabama", rating: 4.6 },
+            { name: "Harmony Mental Health", state: "Iowa", rating: 4.5 },
+            { name: "Pleasant Grove Counseling", state: "Arkansas", rating: 4.7 },
+            { name: "Thrive Psychology Center", state: "Arizona", rating: 4.8 },
+            { name: "Pinecrest Therapy Group", state: "Mississippi", rating: 4.4 },
+            { name: "Rise Behavioral Clinic", state: "Illinois", rating: 4.6 },
+            { name: "Midtown Wellness Institute", state: "New York", rating: 4.7 },
+            { name: "Harborstone Psychology", state: "Maine", rating: 4.5 },
+            { name: "Brightwave Counseling", state: "Delaware", rating: 4.6 },
+            { name: "Valley Mind Health Center", state: "Colorado", rating: 4.7 },
+            { name: "Laurel Springs Therapy", state: "West Virginia", rating: 4.4 },
+            { name: "Unity Shores Mental Health", state: "Hawaii", rating: 4.8 },
+            { name: "Oak Valley Counseling", state: "Wyoming", rating: 4.5 },
+            { name: "Sunrise Path Mental Health", state: "Texas", rating: 4.7 },
+            { name: "Blossom Grove Therapy", state: "California", rating: 4.8 },
+            { name: "Riverlight Behavioral Center", state: "Indiana", rating: 4.6 },
+            { name: "Lakeside Recovery Clinic", state: "Michigan", rating: 4.9 },
+            { name: "Cedar Point Counseling", state: "Wisconsin", rating: 4.4 },
+            { name: "Pathfinder Therapy Group", state: "Utah", rating: 4.6 },
+            { name: "Haven Ridge Psych Center", state: "North Carolina", rating: 4.7 },
+            { name: "Gateway Behavioral Health", state: "Missouri", rating: 4.5 },
+            { name: "Liberty Counseling Center", state: "Pennsylvania", rating: 4.8 },
+            { name: "Harbor Ridge Therapy", state: "Washington", rating: 4.6 },
+            { name: "Insight Behavioral Clinic", state: "Georgia", rating: 4.7 },
+            { name: "Cascade Heights Counseling", state: "Oregon", rating: 4.8 },
+            { name: "Mindful Roots Wellness", state: "Vermont", rating: 4.6 },
+            { name: "Healing Valley Clinic", state: "Tennessee", rating: 4.5 },
+            { name: "Pineview Therapy Center", state: "South Dakota", rating: 4.7 },
+            { name: "Balance Behavioral Services", state: "Florida", rating: 4.8 },
+            { name: "Mountain Crest Counseling", state: "Montana", rating: 4.6 },
+            { name: "Willow Springs Psych Center", state: "North Carolina", rating: 4.7 },
+            { name: "Serenity Ridge Therapy", state: "Texas", rating: 4.5 },
+            { name: "Harborwind Mental Health", state: "Rhode Island", rating: 4.8 },
+            { name: "Hopewell Counseling Group", state: "Ohio", rating: 4.6 },
+            { name: "Flourish Mind Center", state: "California", rating: 4.7 },
+            { name: "Blue Horizon Psych Services", state: "New Mexico", rating: 4.5 },
+            { name: "Brookside Therapy Clinic", state: "Illinois", rating: 4.8 },
+            { name: "Crescent Mental Wellness", state: "Virginia", rating: 4.6 },
+            { name: "Mindwave Behavioral Center", state: "Minnesota", rating: 4.7 },
+            { name: "Tranquil Path Therapy", state: "Kentucky", rating: 4.4 },
+            { name: "Riverbend Community Counseling", state: "Michigan", rating: 4.8 },
+            { name: "Elevate Mental Health Clinic", state: "Colorado", rating: 4.9 },
+            { name: "Lakeshore Psych Care", state: "Wisconsin", rating: 4.5 },
+            { name: "Silver Spring Wellness", state: "Maryland", rating: 4.8 },
+            { name: "True North Counseling", state: "Alaska", rating: 4.6 },
+            { name: "Pacific Mind Center", state: "California", rating: 4.7 },
+            { name: "Cedar Ridge Counseling", state: "Oklahoma", rating: 4.5 },
+            { name: "Harborline Behavioral Clinic", state: "Massachusetts", rating: 4.8 },
+            { name: "WellSpring Therapy Center", state: "Georgia", rating: 4.6 },
+            { name: "Sunrise Mental Wellness", state: "Arizona", rating: 4.7 },
+            { name: "Valley Shore Counseling", state: "Connecticut", rating: 4.5 },
+            { name: "Compass Rose Psych Services", state: "Florida", rating: 4.8 },
+            { name: "Rivercrest Behavioral Group", state: "Texas", rating: 4.6 },
+            { name: "New Heights Counseling", state: "Utah", rating: 4.7 },
+            { name: "Magnolia Psych Clinic", state: "Louisiana", rating: 4.5 },
+            { name: "Midtown Mind Wellness", state: "New York", rating: 4.8 },
+            { name: "Healing Circle Therapy", state: "California", rating: 4.7 }
+        ];
+
+        /**
+         * 标签显示配置
+         * MAX_LABELS: 同时显示的最大标签数量
+         * MAX_DISTANCE: 粒子到鼠标的最大距离阈值（像素）
+         */
+        const MAX_LABELS = 3;
+        const MAX_DISTANCE = 150;
+
+        /**
+         * 州名到缩写的映射表
+         * 用于将完整州名转换为标准缩写
+         */
+        const STATE_ABBREVIATIONS = {
+            'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
+            'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
+            'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
+            'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+            'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+            'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+            'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+            'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+            'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+            'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+            'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT',
+            'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+            'Wisconsin': 'WI', 'Wyoming': 'WY'
+        };
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if(e.touches.length > 0) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+            }
+        });
+
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        class Star {
+            constructor() {
+                this.reset();
+                this.y = random(0, height); 
+            }
+
+            reset() {
+                this.x = random(0, width);
+                this.y = random(0, height);
+                this.size = random(0.5, 1.5);
+                this.blinkSpeed = random(0.02, 0.05);
+                this.alpha = random(0.1, 0.5);
+                this.angle = random(0, Math.PI * 2);
+            }
+
+            update() {
+                this.y -= 0.1; 
+                this.angle += this.blinkSpeed;
+                this.currentAlpha = this.alpha + Math.sin(this.angle) * 0.1;
+
+                if (this.y < 0) this.y = height;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(242, 224, 220, ${this.currentAlpha})`;
+                ctx.fill();
+            }
+        }
+
+        class Particle {
+            constructor(index) {
+                // 通过索引模运算将粒子映射到诊所数据
+                // 这样即使粒子数量与诊所数量不同，每个粒子也有对应的诊所
+                this.clinicIndex = index % clinics.length;
+                this.init();
+            }
+
+            init() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() * 0.6 - 0.3) * 0.6; // 减慢40%
+                this.vy = (Math.random() * 0.6 - 0.3) * 0.6; // 减慢40%
+                
+                this.baseSize = (Math.random() * 2 + 1.5) * 0.5;
+                this.size = this.baseSize;
+                
+                this.angle = Math.random() * Math.PI * 2;
+                this.pulseSpeed = 0.03 + Math.random() * 0.03;
+                
+                const colors = ['#5D6C8C', '#D9BACB'];
+                const colorIndex = Math.floor(Math.random() * colors.length);
+                this.color = colors[colorIndex];
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                this.angle += this.pulseSpeed;
+                this.size = this.baseSize + Math.sin(this.angle) * this.baseSize * 0.3;
+                if (this.size < 0.1) this.size = 0.1;
+
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < MOUSE_RADIUS) {
+                    const forceDirectionX = dx / distance;
+                    const forceDirectionY = dy / distance;
+                    const force = (MOUSE_RADIUS - distance) / MOUSE_RADIUS;
+                    
+                    const repulsionStrength = 2;
+                    this.vx -= forceDirectionX * force * 0.05 * repulsionStrength;
+                    this.vy -= forceDirectionY * force * 0.05 * repulsionStrength;
+
+                    this.size += this.baseSize * 0.8 * force; 
+                }
+            }
+
+            draw() {
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                let isActivated = distance < MOUSE_RADIUS;
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size > 0 ? this.size : 0, 0, Math.PI * 2);
+                const r = parseInt(this.color.slice(1, 3), 16);
+                const g = parseInt(this.color.slice(3, 5), 16);
+                const b = parseInt(this.color.slice(5, 7), 16);
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.8)`;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * 0.4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+                ctx.fill();
+                
+                if (isActivated) {
+                    const force = (MOUSE_RADIUS - distance) / MOUSE_RADIUS;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 0.6, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * force})`;
+                    ctx.fill();
+                }
+            }
+        }
+
+        function initWorld() {
+            particles = [];
+            backgroundStars = [];
+            
+            // 为每个粒子分配索引，用于映射到诊所数据
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle(i));
+            }
+            
+            for (let i = 0; i < STAR_COUNT; i++) {
+                backgroundStars.push(new Star());
+            }
+        }
+
+        /**
+         * 获取最靠近鼠标且视觉上靠前的粒子
+         * 选择算法：
+         * 1. 计算每个粒子到鼠标的欧几里得距离
+         * 2. 使用粒子的 size 作为深度指标（较大的粒子更靠前）
+         * 3. 综合距离和大小，选择距离近且尺寸大的粒子
+         * 4. 只返回在 MAX_DISTANCE 范围内的粒子
+         */
+        function getClosestParticles(mouseX, mouseY, count) {
+            const candidates = particles
+                .map(particle => {
+                    const dx = mouseX - particle.x;
+                    const dy = mouseY - particle.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // 只考虑在范围内的粒子
+                    if (distance > MAX_DISTANCE) return null;
+                    
+                    // 综合评分：距离越近、尺寸越大，评分越高
+                    // 使用距离的倒数（越近越好）和尺寸（越大越好）
+                    const score = (1 / (distance + 1)) * particle.size;
+                    
+                    return { particle, distance, score };
+                })
+                .filter(item => item !== null)
+                .sort((a, b) => b.score - a.score) // 按评分降序排序
+                .slice(0, count); // 只取前 count 个
+            
+            return candidates.map(item => item.particle);
+        }
+
+        /**
+         * 绘制诊所信息标签
+         * 标签位置：粒子右上方，使用固定偏移量
+         * 样式：小字体、低透明度、细体
+         */
+        function drawLabel(ctx, particle, clinic) {
+            // 获取州简称：使用映射表，如果不存在则使用前两个字符
+            const stateAbbr = STATE_ABBREVIATIONS[clinic.state] || 
+                (clinic.state.length > 2 
+                    ? clinic.state.substring(0, 2).toUpperCase() 
+                    : clinic.state.toUpperCase());
+            
+            // 格式化标签文本：诊所名称, 州简称 · 评分
+            const labelText = `${clinic.name}, ${stateAbbr} · ${clinic.rating}`;
+            
+            // 标签位置：粒子右上方偏移
+            const offsetX = 15;
+            const offsetY = -10;
+            const labelX = particle.x + offsetX;
+            const labelY = particle.y + offsetY;
+            
+            // 保存上下文状态
+            ctx.save();
+            
+            // 设置字体样式：细体、小字号
+            ctx.font = '300 10px Arial, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            
+            // 测量文本宽度，用于绘制背景
+            const textMetrics = ctx.measureText(labelText);
+            const textWidth = textMetrics.width;
+            const textHeight = 14;
+            
+            // 绘制半透明背景以提高可读性
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(
+                labelX - 4,
+                labelY - textHeight / 2 - 2,
+                textWidth + 8,
+                textHeight + 4
+            );
+            
+            // 绘制标签文本：白色、低透明度
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillText(labelText, labelX, labelY);
+            
+            // 恢复上下文状态
+            ctx.restore();
+        }
+
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let p1 = particles[i];
+                    let p2 = particles[j];
+
+                    let dx = p1.x - p2.x;
+                    let dy = p1.y - p2.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < CONNECTION_DISTANCE) {
+                        let opacity = 1 - (distance / CONNECTION_DISTANCE);
+                        
+                        let mouseDist = Math.sqrt(Math.pow(mouse.x - p1.x, 2) + Math.pow(mouse.y - p1.y, 2));
+                        let isActivated = mouseDist < MOUSE_RADIUS;
+                        
+                        if (isActivated) {
+                            opacity = Math.min(opacity + 0.3, 1);
+                            ctx.strokeStyle = `rgba(93, 108, 140, ${opacity})`;
+                        } else {
+                            ctx.strokeStyle = `rgba(217, 186, 203, ${opacity * 0.6})`;
+                        }
+
+                        let perpX = -dy / distance;
+                        let perpY = dx / distance;
+                        
+                        let midX = (p1.x + p2.x) / 2;
+                        let midY = (p1.y + p2.y) / 2;
+                        
+                        if (isActivated) {
+                            ctx.lineWidth = 0.25;
+                        } else {
+                            ctx.lineWidth = 0.1;
+                        }
+                        
+                        for (let lineIndex = 0; lineIndex < 3; lineIndex++) {
+                            let angle = (lineIndex / 3) * Math.PI * 2 + (i + j) * 0.1;
+                            let curveOffset = Math.sin(angle) * (distance * 0.08);
+                            
+                            let controlX = midX + perpX * curveOffset;
+                            let controlY = midY + perpY * curveOffset;
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.quadraticCurveTo(controlX, controlY, p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                        
+                        if (isActivated) {
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.4})`;
+                            ctx.lineWidth = 0.15;
+                            for (let lineIndex = 0; lineIndex < 3; lineIndex++) {
+                                let angle = (lineIndex / 3) * Math.PI * 2 + (i + j) * 0.1;
+                                let curveOffset = Math.sin(angle) * (distance * 0.08);
+                                let controlX = midX + perpX * curveOffset;
+                                let controlY = midY + perpY * curveOffset;
+                                ctx.beginPath();
+                                ctx.moveTo(p1.x, p1.y);
+                                ctx.quadraticCurveTo(controlX, controlY, p2.x, p2.y);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.globalCompositeOperation = 'source-over';
+            backgroundStars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            ctx.globalCompositeOperation = 'lighter';
+            
+            drawConnections();
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // 绘制标签：在鼠标附近且视觉上靠前的粒子上显示诊所信息
+            // 使用 source-over 模式确保标签清晰可见
+            ctx.globalCompositeOperation = 'source-over';
+            const labeledParticles = getClosestParticles(mouse.x, mouse.y, MAX_LABELS);
+            labeledParticles.forEach(particle => {
+                const clinic = clinics[particle.clinicIndex];
+                drawLabel(ctx, particle, clinic);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        initWorld();
+        animate();
+
+        window.addEventListener('mousedown', (e) => {
+            for(let i=0; i<5; i++) {
+                // 为新创建的粒子分配诊所索引
+                let p = new Particle(particles.length);
+                p.x = e.clientX;
+                p.y = e.clientY;
+                particles.push(p);
+                if(particles.length > 200) particles.shift();
+            }
+        });
+
+        // 动画效果
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 导航栏动画
+        window.addEventListener('load', () => {
+            const navbar = document.getElementById('navbar');
+            navbar.classList.add('visible');
+            
+            const navLinks = document.querySelectorAll('.nav-links li');
+            navLinks.forEach((link, index) => {
+                setTimeout(() => {
+                    link.classList.add('visible');
+                }, 300 + index * 100);
+            });
+        });
+
+        // 首页标语动画
+        window.addEventListener('load', () => {
+            const tagline = document.getElementById('heroTagline');
+            tagline.classList.add('visible');
+            
+            const words = tagline.querySelectorAll('.word');
+            words.forEach((word, index) => {
+                setTimeout(() => {
+                    word.classList.add('visible');
+                }, 500 + index * 150);
+            });
+
+            // 按钮动画
+            setTimeout(() => {
+                const btn = document.getElementById('getStartedBtn');
+                btn.classList.add('visible');
+            }, 500 + words.length * 150 + 300);
+        });
+
+        // 平滑滚动（只对页面内锚点链接）
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
