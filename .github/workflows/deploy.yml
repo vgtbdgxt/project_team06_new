@@ -34,13 +34,22 @@ jobs:
       - name: Build
         run: npm run build
       
+      - name: Prepare deployment
+        run: |
+          mkdir -p deploy
+          # 复制 frontpage 到根目录
+          cp -r frontend-554/dist/* deploy/
+          # 创建 map 子目录并复制 map 内容
+          mkdir -p deploy/map
+          cp -r map/dist/* deploy/map/
+      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './map/dist'
+          path: './deploy'
 
   deploy:
     environment:
