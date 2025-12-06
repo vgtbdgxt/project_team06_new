@@ -38,10 +38,26 @@ jobs:
         run: |
           mkdir -p deploy
           # 复制 frontpage 到根目录
-          cp -r frontend-554/dist/* deploy/
+          if [ -d "frontend-554/dist" ] && [ -f "frontend-554/dist/index.html" ]; then
+            cp -r frontend-554/dist/* deploy/
+            echo "✓ Frontend files copied"
+            ls -la deploy/
+          else
+            echo "✗ Frontend files not found!"
+            exit 1
+          fi
           # 创建 map 子目录并复制 map 内容
           mkdir -p deploy/map
-          cp -r map/dist/* deploy/map/
+          if [ -d "map/dist" ] && [ -f "map/dist/index.html" ]; then
+            cp -r map/dist/* deploy/map/
+            echo "✓ Map files copied"
+            ls -la deploy/map/
+          else
+            echo "✗ Map files not found!"
+            exit 1
+          fi
+          echo "Final deployment structure:"
+          find deploy -type f | head -20
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
