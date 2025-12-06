@@ -82,6 +82,10 @@ jobs:
           echo "=== Verifying index.html files ==="
           test -f deploy/index.html && echo "✓ deploy/index.html exists" || echo "✗ deploy/index.html missing"
           test -f deploy/map/index.html && echo "✓ deploy/map/index.html exists" || echo "✗ deploy/map/index.html missing"
+          echo ""
+          echo "=== Creating .nojekyll file ==="
+          touch deploy/.nojekyll
+          echo "✓ .nojekyll file created"
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
