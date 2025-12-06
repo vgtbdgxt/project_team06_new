@@ -32,7 +32,7 @@ function App() {
     userLocation.lng
   );
   const {
-    selectedClinic: selectedClinicId,
+    selectedClinic: _selectedClinicId,
     setSelectedClinic,
     travelMode,
     setTravelMode,
@@ -50,7 +50,7 @@ function App() {
   const [showNoise, setShowNoise] = useState(false);
   const [selectedClinic, setSelectedClinicState] = useState<Clinic | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
+  const [_showDetails, setShowDetails] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
   const [showClinicDetails, setShowClinicDetails] = useState(false);
 

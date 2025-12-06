@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { Clinic, Route, GreenSpace, CrowdHotspot, RouteSegment } from '../data/types';
@@ -125,23 +125,23 @@ export default function MapView({
     balanced: '#9933ff',
   };
 
-  const getRouteColor = (route: Route, segmentIdx: number): string => {
-    const baseColor = routeColors[route.type];
-    const segment = route.segments[segmentIdx];
-    if (!segment) return baseColor;
-
-    // Adjust color based on environment
-    if (segment.green > 0.3) {
-      return '#00aa00'; // greener for green spaces
-    }
-    if (segment.crowd > 0.5) {
-      return '#ff6600'; // more orange for crowds
-    }
-    if (segment.noise > 0.5) {
-      return '#ffaa00'; // yellow for noise
-    }
-    return baseColor;
-  };
+  // const _getRouteColor = (route: Route, segmentIdx: number): string => {
+  //   const baseColor = routeColors[route.type];
+  //   const segment = route.segments[segmentIdx];
+  //   if (!segment) return baseColor;
+  //
+  //   // Adjust color based on environment
+  //   if (segment.green > 0.3) {
+  //     return '#00aa00'; // greener for green spaces
+  //   }
+  //   if (segment.crowd > 0.5) {
+  //     return '#ff6600'; // more orange for crowds
+  //   }
+  //   if (segment.noise > 0.5) {
+  //     return '#ffaa00'; // yellow for noise
+  //   }
+  //   return baseColor;
+  // };
 
   return (
     <MapContainer
@@ -264,7 +264,7 @@ export default function MapView({
       {/* Routes */}
       {routes.map(route => {
         // Get the clinic position for this route (assuming routes are for selectedClinic)
-        const clinicPos = selectedClinic
+        const clinicPos: [number, number] | null = selectedClinic
           ? [selectedClinic.lat, selectedClinic.lng]
           : null;
 
@@ -273,7 +273,7 @@ export default function MapView({
         // Function to calculate segment color based on environment
         // Returns a color that clearly shows stress level: green (low) -> yellow -> orange -> red (high)
         // Enhanced contrast for more visible color changes
-        const getSegmentColor = (segment: RouteSegment, baseColor: string): string => {
+        const getSegmentColor = (segment: RouteSegment, _baseColor: string): string => {
           // Calculate comprehensive stress score (0-1)
           const crowdStress = segment.crowd * 0.3;
           const noiseStress = segment.noise * 0.25;
@@ -430,7 +430,7 @@ export default function MapView({
               // Different routes offset in different directions to avoid overlap
               let offsetLat = 0;
               let offsetLng = 0;
-              let perpendicularAngle = 0;
+              // let perpendicularAngle = 0;
               
               // Determine offset direction based on route type
               let offsetDirection = 1; // Default: right side
@@ -456,13 +456,13 @@ export default function MapView({
                   offsetLat = (-dx / length) * offsetDistance;
                   offsetLng = (dy / length) * offsetDistance;
                   // Calculate angle for arrow direction (from route to label)
-                  perpendicularAngle = Math.atan2(offsetLat, offsetLng) * 180 / Math.PI;
+                  // perpendicularAngle = Math.atan2(offsetLat, offsetLng) * 180 / Math.PI;
                 }
               } else {
                 // Larger simple offset if at edge
                 offsetLat = 0.01 * offsetDirection;
                 offsetLng = 0.01 * offsetDirection;
-                perpendicularAngle = 45 * offsetDirection;
+                // perpendicularAngle = 45 * offsetDirection;
               }
               
               const labelLat = routePointLat + offsetLat;

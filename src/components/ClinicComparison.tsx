@@ -15,7 +15,7 @@ export default function ClinicComparison({
   userLat,
   userLng,
   routes,
-  travelMode,
+  travelMode: _travelMode,
 }: ClinicComparisonProps) {
   if (clinics.length === 0) return null;
 
@@ -41,9 +41,9 @@ export default function ClinicComparison({
   const maxTravelTime = Math.max(
     ...comparisonData.map(d => d.travelTime ?? 0).filter(t => t > 0)
   ) || 1;
-  const maxBurden = Math.max(
-    ...comparisonData.map(d => d.burdenScore ?? 0).filter(b => b > 0)
-  ) || 1;
+  // const maxBurden = Math.max(
+  //   ...comparisonData.map(d => d.burdenScore ?? 0).filter(b => b > 0)
+  // ) || 1;
 
   const getDistanceColor = (distance: number, max: number): string => {
     const ratio = distance / max;

@@ -1,4 +1,4 @@
-import { Clinic, Filters } from '../data/types';
+import { Clinic, Filters, TreatmentFocus } from '../data/types';
 import { calculateDistance } from './distance';
 
 export interface RecommendationScore {
@@ -45,7 +45,7 @@ export function calculateRecommendationScore(
   }
 
   // Treatment focus match (15 points per match)
-  const treatmentMatches = filters.treatmentFocus.filter(tf => clinic.treatmentFocus.includes(tf));
+  const treatmentMatches = filters.treatmentFocus.filter((tf: TreatmentFocus) => clinic.treatmentFocus.includes(tf));
   if (treatmentMatches.length > 0) {
     score += treatmentMatches.length * 15;
     reasons.push(`🧠 Offers: ${treatmentMatches.join(', ')}`);
@@ -59,14 +59,14 @@ export function calculateRecommendationScore(
   }
 
   // Language match (8 points per match)
-  const languageMatches = filters.languages.filter(lang => clinic.languages.includes(lang));
+  const languageMatches = filters.languages.filter((lang: string) => clinic.languages.includes(lang));
   if (languageMatches.length > 0) {
     score += languageMatches.length * 8;
     reasons.push(`🗣️ Speaks: ${languageMatches.join(', ')}`);
   }
 
   // Insurance match (12 points per match)
-  const insuranceMatches = filters.insurance.filter(ins => clinic.insurance.includes(ins));
+  const insuranceMatches = filters.insurance.filter((ins: string) => clinic.insurance.includes(ins));
   if (insuranceMatches.length > 0) {
     score += insuranceMatches.length * 12;
     reasons.push(`💳 Accepts: ${insuranceMatches.join(', ')}`);

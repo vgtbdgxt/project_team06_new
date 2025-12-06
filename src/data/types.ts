@@ -92,3 +92,15 @@ export interface BurdenWeights {
   traffic: number;
 }
 
+export interface Filters {
+  clinicTypes: ClinicType[];
+  treatmentFocus: TreatmentFocus[];
+  maxDistance: number | null;
+  waitTime: string[];
+  privacyLevel: PrivacyLevel[];
+  languages: string[];
+  insurance: string[];
+  allowsAnonymous: boolean | null;
+  telehealth: boolean | null;
+}
+

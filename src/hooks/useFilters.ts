@@ -1,18 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Clinic, ClinicType, TreatmentFocus, PrivacyLevel } from '../data/types';
+import { useState } from 'react';
+import { Clinic, Filters } from '../data/types';
 import { calculateDistance } from '../utils/distance';
-
-export interface Filters {
-  clinicTypes: ClinicType[];
-  treatmentFocus: TreatmentFocus[];
-  maxDistance: number | null;
-  waitTime: string[];
-  privacyLevel: PrivacyLevel[];
-  languages: string[];
-  insurance: string[];
-  allowsAnonymous: boolean | null;
-  telehealth: boolean | null;
-}
 
 const DEFAULT_FILTERS: Filters = {
   clinicTypes: [],
@@ -33,7 +21,7 @@ export function useFilters(userLat: number, userLng: number) {
   const updateFilter = <K extends keyof Filters>(
     key: K,
     value: Filters[K]
-  ) => {
+  ): void => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
@@ -57,13 +45,13 @@ export function useFilters(userLat: number, userLng: number) {
 
       // Distance filter (soft exclusion handled in component)
       if (filters.maxDistance !== null) {
-        const distance = calculateDistance(
+        // Still include, but will be faded
+        void calculateDistance(
           userLat,
           userLng,
           clinic.lat,
           clinic.lng
         );
-        // Still include, but will be faded
       }
 
       // Privacy level filter

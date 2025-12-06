@@ -253,7 +253,7 @@ export default function RadarChart({ crowd, noise, aqi, green, traffic, rawAQI }
                 x={pos.x + xOffset}
                 y={pos.y + yOffset}
                 textAnchor={textAnchor}
-                dominantBaseline={angleDeg < 45 || angleDeg > 315 ? 'baseline' : angleDeg >= 135 && angleDeg < 225 ? 'hanging' : 'middle'}
+                dominantBaseline={angleDeg < 45 || angleDeg > 315 ? 'alphabetic' : angleDeg >= 135 && angleDeg < 225 ? 'hanging' : 'middle'}
                 fontSize="12"
                 fontWeight="600"
                 fill="#333"
@@ -265,7 +265,7 @@ export default function RadarChart({ crowd, noise, aqi, green, traffic, rawAQI }
                 x={pos.x + xOffset}
                 y={pos.y + yOffset + valueYOffset}
                 textAnchor={textAnchor}
-                dominantBaseline={angleDeg < 45 || angleDeg > 315 ? 'baseline' : angleDeg >= 135 && angleDeg < 225 ? 'hanging' : 'middle'}
+                dominantBaseline={angleDeg < 45 || angleDeg > 315 ? 'alphabetic' : angleDeg >= 135 && angleDeg < 225 ? 'hanging' : 'middle'}
                 fontSize="11"
                 fontWeight="500"
                 fill="#666"

@@ -1,5 +1,4 @@
 import { Clinic, Filters } from '../data/types';
-import { calculateDistance } from '../utils/distance';
 import { calculateRecommendationScore, getRecommendationLevel } from '../utils/recommendation';
 import { Badge, ProgressBar } from 'react-bootstrap';
 

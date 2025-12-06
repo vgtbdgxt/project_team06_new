@@ -25,37 +25,37 @@ export default function RouteBurdenSummary({
     route.segments.reduce((sum, s) => sum + s.traffic, 0) /
     route.segments.length;
 
-  const greenPercentage = (avgGreen * 100).toFixed(0);
+  // const _greenPercentage = (avgGreen * 100).toFixed(0);
 
   // Color functions for different metrics
-  const getCrowdColor = (crowd: number): string => {
-    const percent = crowd * 100;
-    if (percent < 30) return '#28a745'; // Green - low crowd
-    if (percent < 60) return '#ffc107'; // Yellow - medium crowd
-    return '#dc3545'; // Red - high crowd
-  };
+  //   // const _getCrowdColor = (crowd: number): string => {
+  //   const percent = crowd * 100;
+  //   if (percent < 30) return '#28a745'; // Green - low crowd
+  //   if (percent < 60) return '#ffc107'; // Yellow - medium crowd
+  //   return '#dc3545'; // Red - high crowd
+  // };
 
-  const getNoiseColor = (noise: number): string => {
-    const percent = noise * 100;
-    if (percent < 30) return '#28a745'; // Green - low noise
-    if (percent < 60) return '#ffc107'; // Yellow - medium noise
-    return '#dc3545'; // Red - high noise
-  };
+  //   // const _getNoiseColor = (noise: number): string => {
+  //   const percent = noise * 100;
+  //   if (percent < 30) return '#28a745'; // Green - low noise
+  //   if (percent < 60) return '#ffc107'; // Yellow - medium noise
+  //   return '#dc3545'; // Red - high noise
+  // };
 
-  const getAQIColor = (aqi: number): string => {
-    if (aqi <= 50) return '#28a745'; // Green - Good
-    if (aqi <= 100) return '#ffc107'; // Yellow - Moderate
-    if (aqi <= 150) return '#fd7e14'; // Orange - Unhealthy for sensitive groups
-    if (aqi <= 200) return '#dc3545'; // Red - Unhealthy
-    return '#6f42c1'; // Purple - Very unhealthy
-  };
+  //   // const _getAQIColor = (aqi: number): string => {
+  //   if (aqi <= 50) return '#28a745'; // Green - Good
+  //   if (aqi <= 100) return '#ffc107'; // Yellow - Moderate
+  //   if (aqi <= 150) return '#fd7e14'; // Orange - Unhealthy for sensitive groups
+  //   if (aqi <= 200) return '#dc3545'; // Red - Unhealthy
+  //   return '#6f42c1'; // Purple - Very unhealthy
+  // };
 
-  const getGreenSpaceColor = (green: number): string => {
-    const percent = green * 100;
-    if (percent > 50) return '#28a745'; // Green - high green space
-    if (percent > 20) return '#20c997'; // Teal - moderate green space
-    return '#6c757d'; // Gray - low green space
-  };
+  //   // const _getGreenSpaceColor = (green: number): string => {
+  //   const percent = green * 100;
+  //   if (percent > 50) return '#28a745'; // Green - high green space
+  //   if (percent > 20) return '#20c997'; // Teal - moderate green space
+  //   return '#6c757d'; // Gray - low green space
+  // };
 
   return (
     <div className="card mt-3">
